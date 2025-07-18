@@ -14,6 +14,11 @@ int main() {
     int count=0;
     if(notes_list(&file_names,&count,"notes")==-1)
         return -1;
+    puts("-------");
+    puts(file_names[0]);
+    puts(file_names[1]);
+    puts(file_names[2]);
+    return 0;
     ui_draw_header("TermNote - Press 'q' to quit");
     if(notes_load_all("notes")==-1){
         printf("%s\n",strerror(errno));

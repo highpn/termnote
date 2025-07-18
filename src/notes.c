@@ -94,17 +94,15 @@ int notes_list(char ***filenames, int *count,const char *dir_name){
             *count+=1;
         }
     }
-    *filenames=malloc(sizeof(char**)*(*count));
-  return 0;
     
-    if(NULL==*filenames){
-        printf("out of memory\n");
-        return -1;
-    }
+  
+    
+    (*filenames)=malloc(sizeof(char*)**count);
+    
     for(int i=0;i<*count; i++){
-        *filenames[i]=malloc(100);
-        strcpy(*filenames[i],names[i]);
-        printf("%s",*filenames[i]);
+        (*filenames)[i]=malloc(sizeof(char)*strlen(names[i]));
+        strcpy((*filenames)[i],names[i]);
+        printf("%s || ",(*filenames)[i]);
     }
     closedir(dirp);
     return 0;
