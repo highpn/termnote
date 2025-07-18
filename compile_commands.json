@@ -1,0 +1,34 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/main.o",
+      "src/main.c"
+    ],
+    "directory": "/home/marci/termnote",
+    "file": "/home/marci/termnote/src/main.c",
+    "output": "/home/marci/termnote/src/main.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/gcc",
+      "-Wall",
+      "-Wextra",
+      "-g",
+      "-Iinclude",
+      "-c",
+      "-o",
+      "src/ui.o",
+      "src/ui.c"
+    ],
+    "directory": "/home/marci/termnote",
+    "file": "/home/marci/termnote/src/ui.c",
+    "output": "/home/marci/termnote/src/ui.o"
+  }
+]
