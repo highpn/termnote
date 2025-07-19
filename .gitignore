@@ -1,0 +1,42 @@
+# Object files
+*.o
+
+# Executables (add your binary names if known)
+a.out
+main
+my_program
+
+# Dependency files (if used)
+*.d
+
+# Backup/editor files
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Core dumps
+core
+vgcore.*
+
+# Logs
+*.log
+
+# GDB/LLDB
+*.dSYM/
+.gdb_history
+
+# Compilation database (optional)
+compile_commands.json
+
+# Tags and cscope
+tags
+cscope.*
+
+# Personal configs
+.env
+
+# IDEs or editors
+.vscode/
+.idea/
