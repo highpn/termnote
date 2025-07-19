@@ -40,3 +40,4 @@ cscope.*
 # IDEs or editors
 .vscode/
 .idea/
+.cache/clangd/index
