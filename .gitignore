@@ -41,3 +41,4 @@ cscope.*
 .vscode/
 .idea/
 .cache/clangd/index
+./notes/
