@@ -72,7 +72,16 @@ void handle_key_press(int ch) {
         case KEY_F(2):
             delete_selected_note();
             break;
-    }
+        case KEY_LEFT:
+            if (selected_index > 0) {
+                selected_index--;
+            }
+            break;
+        case KEY_RIGHT:
+            if (selected_index < count - 1) {
+                selected_index++;       
+             }
+        }
 }
 
 void redraw_ui() {
