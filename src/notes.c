@@ -20,7 +20,6 @@ int notes_load_all(const char * dir_name){
  
     while((dir=readdir(dirp))!=NULL){
         if(*dir->d_name!='.'){
-        printf("%s\n",dir->d_name);    
         if((fd=openat(fd_dirp,dir->d_name,O_RDONLY))==-1){
             return -1;
         } 
@@ -28,7 +27,6 @@ int notes_load_all(const char * dir_name){
             return -1;
         } 
         buffer[TEXT_BUFFER_SIZE]=0;
-        printf("%s\n",buffer);
     }
     }
     closedir(dirp);
@@ -89,8 +87,6 @@ int notes_list(char ***filenames, int *count,const char *dir_name){
     while((dir=readdir(dirp))!=NULL){
         if(*dir->d_name!='.'){
             strcpy(names[*count],dir->d_name);
-            printf("%s |",names[*count]);
-
             *count+=1;
         }
     }
@@ -102,7 +98,6 @@ int notes_list(char ***filenames, int *count,const char *dir_name){
     for(int i=0;i<*count; i++){
         (*filenames)[i]=malloc(sizeof(char)*strlen(names[i]));
         strcpy((*filenames)[i],names[i]);
-        printf("%s || ",(*filenames)[i]);
     }
     closedir(dirp);
     return 0;
