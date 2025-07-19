@@ -3,6 +3,7 @@
 #include <ncurses.h>
 #include <string.h>
 #include <errno.h>
+#define TEXT_BUFFER_SIZE 4096
 enum menu_options options;
 WINDOW * win_text;
 WINDOW * win_notes_names;
@@ -23,8 +24,6 @@ int ui_init() {
     wbkgd(win_notes_names, COLOR_PAIR(2)); 
     wbkgd(win_text, COLOR_PAIR(1));       // Set background color of window
     wbkgd(win_options, COLOR_PAIR(1));       // Set background color of window
-
-    mvwprintw(win_text, 1, 1, "Colored window!");
     wrefresh(win_text);
     wrefresh(win_notes_names);
     return 1;
@@ -45,10 +44,15 @@ void ui_draw_input(const char *prefix, int ch) {
 int ui_get_key() {
     return getch();
 }
-void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int selected) {
-     werase(win_notes_names);
+void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int selected,char*buffer) {
+    werase(win_notes_names);
     box(win_notes_names, 0, 0);
     int x = 2;
+    if(count == 0) {
+        mvwprintw(win_notes_names, 1, x, "No notes available.");
+        wrefresh(win_notes_names);
+        return;
+    }
     for (int i = 0; i < count; i++) {
         if (i == selected) {
             wattron(win_notes_names, A_REVERSE);
@@ -59,7 +63,13 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
         }
         x += strlen(filenames[i]) + 3;  // Adjust spacing
     }
+    memset(buffer, 0, TEXT_BUFFER_SIZE);
+    strncpy(buffer,notes_load(filenames[selected], "notes"), TEXT_BUFFER_SIZE - 1);
+    (buffer)[TEXT_BUFFER_SIZE - 1] = '\0'; // Ensure null termination
+
     wrefresh(win_notes_names);
+    wrefresh(win_text);
+    mvwprintw(win_text, 4, 0,"%s",buffer);
 }
 
 void ui_cleanup() {
@@ -74,7 +84,6 @@ void ui_edit_note(char*buffer, size_t bufsize) {
     getnstr(buffer, bufsize - 1);
     buffer[bufsize - 1] = '\0'; // Ensure null termination
     move(4, 0);
-    mvwprintw(win_text, 4, 0,"Note saved: %s", buffer);
     wrefresh(win_text);
     wrefresh(win_notes_names);
     refresh();
@@ -96,7 +105,7 @@ ui_draw_note(const char *title, const char *content) {
     box(win_notes_names, 0, 0);                          // Optional border
 
     box(win_options, 0, 0);                          // Optional border
-    mvwprintw(win_text, 4, 0, "Colored window!");
+
     mvwprintw(win_notes_names, 1, 1, "Notes List");
     mvwprintw(win_options, 1, 1, "F1: New   F2: Edit   F3: Delete   F4: Save  F5: Quit F6:");
     move(10, 0);

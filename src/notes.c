@@ -62,6 +62,7 @@ char *notes_load(const char *filename,const char *dir_name){
         return NULL;
     }
     static char buffer[TEXT_BUFFER_SIZE];
+    memset(buffer, 0, TEXT_BUFFER_SIZE); // Clear buffer
     int n;
     if((n=read(fd,buffer,TEXT_BUFFER_SIZE-1))==-1){
         close(fd);
@@ -92,7 +93,12 @@ int notes_list(char ***filenames, int *count,const char *dir_name){
     }
     
   
-    
+    if(*count == 0) {
+        closedir(dirp);
+        *filenames = NULL; // No files found
+        return 0;
+    }
+    free(*filenames);
     (*filenames)=malloc(sizeof(char*)**count);
     
     for(int i=0;i<*count; i++){
