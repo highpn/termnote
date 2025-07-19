@@ -10,7 +10,7 @@ char buffer[TEXT_BUFFER_SIZE]; // Buffer to hold note content
 extern enum menu_options options; // Current menu option
 extern WINDOW*win_notes_names; // Window for displaying notes list
 
-char **file_names=NULL;// Array to hold note filenames
+char **file_names;// Array to hold note filenames
 int selected_index = 0; // Current selected index in the notes list
 int count = 0;  // Number of notes
 int running = 1; // Flag to control the main loop
@@ -24,8 +24,11 @@ int main() {
     if (!ui_init()) {
         return EXIT_FAILURE;
     }
-    
+    refresh_notes_list();
+    ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
+    refresh();
     while (running) {
+        redraw_ui();
         if (refresh_notes_list() == -1)
             break;
 
@@ -35,7 +38,7 @@ int main() {
         if (refresh_notes_list() == -1)
             break;
 
-        redraw_ui();
+        
     }
 
     ui_cleanup();
@@ -64,7 +67,7 @@ void handle_key_press(int ch) {
             ui_del_input(--tmp);
             break;
         case KEY_F(1):
-            ui_new_note(buffer, TEXT_BUFFER_SIZE);
+            add_note_to_list();
             break;
         case KEY_F(2):
             delete_selected_note();
@@ -80,6 +83,7 @@ void redraw_ui() {
         ui_draw_note(file_names[selected_index], buffer);
     }
     ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
+    ui_display_options();
 }
 int refresh_notes_list() {
     return notes_list(&file_names, &count, "notes");
@@ -96,4 +100,10 @@ void delete_selected_note() {
         selected_index--; // Move up if at the end
     }
     count--; // Decrease count after deletion
+}
+void add_note_to_list() {
+    if (count >= 100) return; // Prevent overflow
+    ui_new_note(buffer, TEXT_BUFFER_SIZE);
+    
+    // Adjust selected index if necessary
 }

@@ -62,7 +62,7 @@ char *notes_load(const char *filename,const char *dir_name){
         return NULL;
     }
     static char buffer[TEXT_BUFFER_SIZE];
-    memset(buffer, 0, TEXT_BUFFER_SIZE); // Clear buffer
+    memset(buffer,0, TEXT_BUFFER_SIZE); // Clear buffer
     int n;
     if((n=read(fd,buffer,TEXT_BUFFER_SIZE-1))==-1){
         close(fd);
@@ -77,35 +77,53 @@ char *notes_load(const char *filename,const char *dir_name){
 
 // List all note filenames
 int notes_list(char ***filenames, int *count,const char *dir_name){
-    DIR*dirp;
-    *count=0;
-    char names[100][100];
-    dirp=opendir(dir_name);
-    if(dirp==NULL){
-        return -1;
-    }
+    DIR *dirp;
     struct dirent *dir;
-    while((dir=readdir(dirp))!=NULL){
-        if(*dir->d_name!='.'){
-            strcpy(names[*count],dir->d_name);
-            *count+=1;
+    int temp_count = 0;
+    char names[100][256];
+
+    dirp = opendir(dir_name);
+    if (dirp == NULL) return -1;
+
+    while ((dir = readdir(dirp)) != NULL) {
+        if (dir->d_name[0] != '.') {
+            strncpy(names[temp_count], dir->d_name, 255);
+            names[temp_count][255] = '\0';
+            temp_count++;
+            if (temp_count >= 100) break;
         }
     }
-    
-  
-    if(*count == 0) {
-        closedir(dirp);
-        *filenames = NULL; // No files found
+    closedir(dirp);
+
+    if (*filenames != NULL && *count > 0) {
+        for (int i = 0; i < *count; i++) {
+            free((*filenames)[i]);
+        }
+        free(*filenames);
+        *filenames = NULL;
+    }
+
+    *count = temp_count; // Now safe to update
+
+    if (*count == 0) {
+        *filenames = NULL;
         return 0;
     }
-    free(*filenames);
-    (*filenames)=malloc(sizeof(char*)**count);
-    
-    for(int i=0;i<*count; i++){
-        (*filenames)[i]=malloc(sizeof(char)*strlen(names[i]));
-        strcpy((*filenames)[i],names[i]);
+
+    *filenames = malloc(sizeof(char *) * (*count));
+    if (*filenames == NULL) return -1;
+
+    for (int i = 0; i < *count; i++) {
+        (*filenames)[i] = malloc(strlen(names[i]) + 1);
+        if ((*filenames)[i] == NULL) {
+            for (int j = 0; j < i; j++) free((*filenames)[j]);
+            free(*filenames);
+            *filenames = NULL;
+            return -1;
+        }
+        strcpy((*filenames)[i], names[i]);
     }
-    closedir(dirp);
+
     return 0;
 }    
 notes_delete(const char *filename) {

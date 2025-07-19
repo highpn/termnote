@@ -24,8 +24,6 @@ int ui_init() {
     wbkgd(win_notes_names, COLOR_PAIR(2)); 
     wbkgd(win_text, COLOR_PAIR(1));       // Set background color of window
     wbkgd(win_options, COLOR_PAIR(1));       // Set background color of window
-    wrefresh(win_text);
-    wrefresh(win_notes_names);
     return 1;
 }
 
@@ -46,6 +44,7 @@ int ui_get_key() {
 }
 void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int selected,char*buffer) {
     werase(win_notes_names);
+    wrefresh(win_text);
     box(win_notes_names, 0, 0);
     int x = 2;
     if(count == 0) {
@@ -63,13 +62,20 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
         }
         x += strlen(filenames[i]) + 3;  // Adjust spacing
     }
-    memset(buffer, 0, TEXT_BUFFER_SIZE);
+    buffer=memset(buffer, 0, TEXT_BUFFER_SIZE);
     strncpy(buffer,notes_load(filenames[selected], "notes"), TEXT_BUFFER_SIZE - 1);
     (buffer)[TEXT_BUFFER_SIZE - 1] = '\0'; // Ensure null termination
 
+    
+    if(buffer[0] == '\0') {
+        wclear(win_text);
+        mvwprintw(win_text, 4, 4,"No content available for this note.");
+    } else {
+        mvwprintw(win_text, 2, 2,"Note %s:", filenames[selected]);
+        mvwprintw(win_text, 4, 4,"%s", buffer);
+    }
     wrefresh(win_notes_names);
     wrefresh(win_text);
-    mvwprintw(win_text, 4, 0,"%s",buffer);
 }
 
 void ui_cleanup() {
@@ -102,41 +108,73 @@ ui_draw_note(const char *title, const char *content) {
 
     }
     box(win_text, 0, 0);                          // Optional border
-    box(win_notes_names, 0, 0);                          // Optional border
-
-    box(win_options, 0, 0);                          // Optional border
-
+    box(win_notes_names, 0, 0);                   // Optional border
     mvwprintw(win_notes_names, 1, 1, "Notes List");
-    mvwprintw(win_options, 1, 1, "F1: New   F2: Edit   F3: Delete   F4: Save  F5: Quit F6:");
     move(10, 0);
     //clrtoeol();
     printw("Note: %s", title);
     move(20, 10);
     //clrtoeol();
-    mvwprintw(win_text, 4, 0,"%s",content);
     wrefresh(win_text);
     wrefresh(win_notes_names);
-    wrefresh(win_options);
 }
 void ui_new_note(char *buffer, size_t bufsize) {
-    move(3, 0);
-    clrtoeol();
-    printw("New note: ");
-    
-    getnstr(buffer, bufsize - 1);
-    buffer[bufsize - 1] = '\0'; // Ensure null termination
-    move(4, 0);
-    mvwprintw(win_notes_names, 4, 0,"Note created: %s", buffer);
-    if(notes_save(buffer,"", "notes")==-1){
-        mvwprintw(win_notes_names, 5, 0,"Error saving note: %s", strerror(errno));
-    } else {
-        mvwprintw(win_notes_names, 5, 0,"Note saved successfully.");
+    int pos = 0;
+    int ch;
+    int blink = 1;
+
+    memset(buffer, 0, bufsize);
+
+    nodelay(stdscr, TRUE);  // Non-blocking input
+    curs_set(0);            // Hide cursor
+
+    for(;;) {
+        // Draw input prompt and text
+        move(0, 0);
+        clrtoeol();
+        printw("Enter note: ");
+        addnstr(buffer, pos);
+
+        // Draw blinking cursor as underscore
+        if (blink) {
+            addch('_');
+        } else {
+            addch(' ');
+        }
+
+        refresh();
+
+        blink = !blink;         // Toggle cursor
+        usleep(40000);         // Blink delay (400 ms)
+
+        ch = getch();           // Get key (non-blocking)
+        if (ch == ERR) continue;
+        if (ch == 27){ goto end; } // Escape to finish
+        if (ch == '\n') break;  // Enter to finish
+        else if (ch == KEY_BACKSPACE || ch == 127) {
+            if (pos > 0) buffer[--pos] = '\0';
+        } else if (pos < bufsize - 1 && ch >= 32 && ch <= 126) {
+            buffer[pos++] = ch;
+            buffer[pos] = '\0';
+        }
     }
-    wrefresh(win_notes_names);
+    notes_save(buffer,"", "notes"); // Save the new note
+    end:
+    nodelay(stdscr, FALSE); // Restore blocking input
+    curs_set(1);            // Show real cursor again
+    clear();             // Clear screen    
+    move(0, 0);
+    refresh();
 }
 void ui_del_input(char*buffer){
     *buffer = '\0'; // Clear the input buffer
     clrtobot();
 
     refresh();
+}
+void ui_display_options() {
+    werase(win_options);
+    box(win_options, 0, 0);
+    mvwprintw(win_options, 1, 1, "F1: New Note   F2: Delete Note   F3: Save Note   F4: Quit");
+    wrefresh(win_options);
 }
