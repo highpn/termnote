@@ -8,6 +8,7 @@ enum menu_options options;
 WINDOW * win_text;
 WINDOW * win_notes_names;
 WINDOW * win_options;
+WINDOW * win_tools;
 int ui_init() {
     initscr();
     cbreak();
@@ -21,9 +22,13 @@ int ui_init() {
     win_text=newwin( 20, 50, 10, 10);
     win_notes_names=newwin( 5, 100, 0, 10);
     win_options=newwin( 5, 100, 30, 10);
+    win_tools=newwin( 20, 20, 10, 60);
     wbkgd(win_notes_names, COLOR_PAIR(2)); 
     wbkgd(win_text, COLOR_PAIR(1));       // Set background color of window
-    wbkgd(win_options, COLOR_PAIR(1));       // Set background color of window
+    wbkgd(win_options, COLOR_PAIR(2));       // Set background color of window
+    
+    wrefresh(win_tools);
+
     return 1;
 }
 
@@ -46,6 +51,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
     werase(win_notes_names);
     wrefresh(win_text);
     box(win_notes_names, 0, 0);
+    box(win_tools, 0, 0);                   // Optional border
     int x = 2;
     if(count == 0) {
         mvwprintw(win_notes_names, 1, x, "No notes available.");
@@ -76,6 +82,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
     }
     wrefresh(win_notes_names);
     wrefresh(win_text);
+    wrefresh(win_tools);
 }
 
 void ui_cleanup() {
@@ -92,6 +99,7 @@ void ui_edit_note(char*buffer, size_t bufsize) {
     move(4, 0);
     wrefresh(win_text);
     wrefresh(win_notes_names);
+    wrefresh(win_tools);
     refresh();
 
 }
@@ -117,6 +125,7 @@ ui_draw_note(const char *title, const char *content) {
     //clrtoeol();
     wrefresh(win_text);
     wrefresh(win_notes_names);
+    wrefresh(win_tools);
 }
 void ui_new_note(char *buffer, size_t bufsize) {
     int pos = 0;
