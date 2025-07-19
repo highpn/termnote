@@ -7,6 +7,8 @@
 #include <stdio.h>
 #define TEXT_BUFFER_SIZE 4096
 char buffer[TEXT_BUFFER_SIZE];
+extern enum menu_options options;
+extern WINDOW*win_notes_names;
 int main() {
     if (!ui_init()) {
         return 1;
@@ -31,9 +33,20 @@ int main() {
     for (;;) {
         int ch = ui_get_key();
         if (ch == 'q') break;
-        if (ch == '\t') selected_index = (selected_index + 1) % count;
-        if (ch == 'c' ) {ui_del_input(--tmp);}
-        else{
+        if (ch == '\t') {selected_index = (selected_index + 1) % count;}
+        
+        if (ch == ';') {options=selected_editor;}
+        if (ch == '\\') {options=selected_viewer;}
+        if (ch == 'c' ) {*tmp=' '; ui_del_input(--tmp); }
+        if (ch == KEY_F(1)){ui_new_note(buffer, TEXT_BUFFER_SIZE);}
+        if (ch == KEY_F(2)) {
+            if(notes_delete(file_names[selected_index])==-1){printf("%s\n",strerror(errno));
+            return EXIT_FAILURE;
+        }
+     }
+        if(notes_list(&file_names,&count,"notes")==-1)
+        return -1;
+    
             if (tmp - buffer < TEXT_BUFFER_SIZE - 1) {
                 *tmp++ = (char)ch;
             } else {
@@ -41,13 +54,11 @@ int main() {
                 tmp = buffer;
                 *tmp++ = (char)ch;
             }
-        }
+        
         ui_draw_note(file_names[selected_index],buffer);
-        ui_list_notes(file_names, count);
-
-        ui_draw_input("Key pressed: ", ch);
-    }
-
+        ui_list_notes(win_notes_names,file_names, count,selected_index);
+    
+    }   
     ui_cleanup();
     return 0;
 }

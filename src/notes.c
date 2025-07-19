@@ -102,6 +102,26 @@ int notes_list(char ***filenames, int *count,const char *dir_name){
     closedir(dirp);
     return 0;
 }    
+notes_delete(const char *filename) {
+    DIR *dirp = opendir("notes");
+    if (dirp == NULL) {
+        return -1;
+    }
+    int fd = openat(dirfd(dirp), filename, O_RDONLY);
+    if (fd == -1) {
+        closedir(dirp);
+        return -1;
+    }
+    close(fd);
+    
+    if (unlinkat(dirfd(dirp), filename, 0) == -1) {
+        closedir(dirp);
+        return -1;
+    }
+    
+    closedir(dirp);
+    return 0;
+}
 /*
 // Delete a note
 int notes_delete(const char *filename);                                                                         */
