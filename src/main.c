@@ -104,7 +104,7 @@ void handle_key_press(int ch)
         }
         break;
     case KEY_DOWN:
-        if (tools_selected < selected_count)
+        if (tools_selected < selected_count-1)
         {
             tools_selected++;
         }

@@ -43,9 +43,10 @@ void ui_draw_header(const char *title)
 
 void ui_draw_input(const char *prefix, int ch)
 {
-    move(2, 0);
+    move(0, 0);
     clrtoeol();
     printw("%s%c", prefix, ch);
+    
     refresh();
 }
 
@@ -132,7 +133,7 @@ void ui_cleanup()
 
 void ui_edit_note(char *buffer, size_t bufsize)
 {
-    move(3, 0);
+    move(0, 0);
     clrtoeol();
     printw("Edit note: ");
     memset(buffer, ' ', bufsize);
@@ -142,13 +143,13 @@ void ui_edit_note(char *buffer, size_t bufsize)
     clear();
     wclear(win_text);
     buffer[bufsize - 1] = '\0'; // Ensure null termination
-    move(4, 0);
+    move(0, 0);
     wprintw(win_text, "%s", buffer);
     wrefresh(win_text);
     wrefresh(win_notes_names);
     wrefresh(win_tools);
     refresh();
-    move(5, 0);
+    move(0, 0);
 }
 ui_draw_note(const char *title, const char *content)
 {
@@ -167,10 +168,10 @@ ui_draw_note(const char *title, const char *content)
     box(win_text, 0, 0);        // Optional border
     box(win_notes_names, 0, 0); // Optional border
     mvwprintw(win_notes_names, 1, 1, "Notes List");
-    move(10, 0);
+    move(0, 0);
     // clrtoeol();
     printw("Note: %s", title);
-    move(20, 10);
+    move(0, 0);
     // clrtoeol();
     wrefresh(win_text);
     wrefresh(win_notes_names);
@@ -233,7 +234,7 @@ void ui_new_note(char *buffer, size_t bufsize)
     notes_save(buffer, "", notes_dir_path); // Save the new note
 end:
     nodelay(stdscr, FALSE); // Restore blocking input
-    curs_set(1);            // Show real cursor again
+    curs_set(0);            // Show real cursor again
     clear();                // Clear screen
     move(0, 0);
     refresh();
