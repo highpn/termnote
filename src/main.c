@@ -1,40 +1,44 @@
-#include <stdlib.h>
-#include "ui.h"
 #include "notes.h"
 #include "poller.h"
-#include <string.h>
+#include "ui.h"
 #include <errno.h>
 #include <stdio.h>
-#define TEXT_BUFFER_SIZE 4096 // Size of the text buffer for notes
-char buffer[TEXT_BUFFER_SIZE]; // Buffer to hold note content
-extern enum menu_options options; // Current menu option
-extern WINDOW*win_notes_names; // Window for displaying notes list
+#include <stdlib.h>
+#include <string.h>
+#define TEXT_BUFFER_SIZE 4096                      // Size of the text buffer for notes
+char                     buffer[TEXT_BUFFER_SIZE]; // Buffer to hold note content
+extern enum menu_options options;                  // Current menu option
+extern WINDOW           *win_notes_names;          // Window for displaying notes list
 
-char **file_names;// Array to hold note filenames
-int selected_index = 0; // Current selected index in the notes list
-int count = 0;  // Number of notes
-int running = 1; // Flag to control the main loop
-extern char *notes_dir_path; // Path to the notes directory
-void handle_key_press(int ch); // Function to handle key presses
-void delete_selected_note(); // Function to delete the selected note
-void redraw_ui();   // Function to redraw the UI    
-int refresh_notes_list();   // Function to refresh the list of notes
-void delete_selected_note(); // Function to delete the selected note
+char       **file_names;               // Array to hold note filenames
+int          selected_index = 0;       // Current selected index in the notes list
+int          count          = 0;       // Number of notes
+int          running        = 1;       // Flag to control the main loop
+extern char *notes_dir_path;           // Path to the notes directory
+void         handle_key_press(int ch); // Function to handle key presses
+void         delete_selected_note();   // Function to delete the selected note
+void         redraw_ui();              // Function to redraw the UI
+int          refresh_notes_list();     // Function to refresh the list of notes
+void         delete_selected_note();   // Function to delete the selected note
 // Function to initialize the UI and load notes
-int main() {
-    
+int main()
+{
+
     get_notes_dir();
-    if (notes_dir_path == NULL) {
+    if (notes_dir_path == NULL)
+    {
         fprintf(stderr, "Failed to get notes directory.\n");
         return EXIT_FAILURE;
     }
-    if (!ui_init()) {
+    if (!ui_init())
+    {
         return EXIT_FAILURE;
     }
     refresh_notes_list();
     ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
     refresh();
-    while (running) {
+    while (running)
+    {
         redraw_ui();
         if (refresh_notes_list() == -1)
             break;
@@ -44,83 +48,96 @@ int main() {
 
         if (refresh_notes_list() == -1)
             break;
-
-        
     }
 
     ui_cleanup();
     return 0;
 }
 // Function to handle key presses
-void handle_key_press(int ch) {
-        char*tmp=buffer;
+void handle_key_press(int ch)
+{
+    char *tmp = buffer;
 
-    switch (ch) {
-        case 'q':
-            running = 0;
-            break;
-        case '\t':
-            if (count > 0)
-                selected_index = (selected_index + 1) % count;
-            break;
-        case ';':
-            options = selected_editor;
-            break;
-        case '\\':
-            options = selected_viewer;
-            break;
-        case 'c':
-            *tmp = ' ';
-            ui_del_input(--tmp);
-            break;
-        case KEY_F(1):
-            add_note_to_list();
-            break;
-        case KEY_F(2):
-            delete_selected_note();
-            break;
-        case KEY_LEFT:
-            if (selected_index > 0) {
-                selected_index--;
-            }
-            break;
-        case KEY_RIGHT:
-            if (selected_index < count - 1) {
-                selected_index++;       
-             }
+    switch (ch)
+    {
+    case 'q':
+        running = 0;
+        break;
+    case '\t':
+        if (count > 0)
+            selected_index = (selected_index + 1) % count;
+        break;
+    case ';':
+        options = selected_editor;
+        break;
+    case '\\':
+        options = selected_viewer;
+        break;
+    case 'c':
+        *tmp = ' ';
+        ui_del_input(--tmp);
+        break;
+    case KEY_F(1):
+        add_note_to_list();
+        break;
+    case KEY_F(2):
+        delete_selected_note();
+        break;
+    case KEY_LEFT:
+        if (selected_index > 0)
+        {
+            selected_index--;
         }
+        break;
+    case KEY_RIGHT:
+        if (selected_index < count - 1)
+        {
+            selected_index++;
+        }
+    }
 }
 
-void redraw_ui() {
-    if (count == 0) {
+void redraw_ui()
+{
+    if (count == 0)
+    {
         selected_index = 0;
-        buffer[0] = '\0';
-    } else {
+        buffer[0]      = '\0';
+    }
+    else
+    {
         ui_draw_note(file_names[selected_index], buffer);
     }
     ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
     ui_display_options();
     ui_list_tools(0);
 }
-int refresh_notes_list() {
+int refresh_notes_list()
+{
     return notes_list(&file_names, &count, notes_dir_path);
 }
 
-void delete_selected_note() {
-    if (count == 0) return; // No notes to delete
-    if (notes_delete(file_names[selected_index]) == -1) {
+void delete_selected_note()
+{
+    if (count == 0)
+        return; // No notes to delete
+    if (notes_delete(file_names[selected_index]) == -1)
+    {
         printf("Error deleting note: %s\n", strerror(errno));
         return;
     }
     // Adjust selected index if necessary
-    if (selected_index >= count - 1) {
+    if (selected_index >= count - 1)
+    {
         selected_index--; // Move up if at the end
     }
     count--; // Decrease count after deletion
 }
-void add_note_to_list() {
-    if (count >= 100) return; // Prevent overflow
+void add_note_to_list()
+{
+    if (count >= 100)
+        return; // Prevent overflow
     ui_new_note(buffer, TEXT_BUFFER_SIZE);
-    
+
     // Adjust selected index if necessary
 }
