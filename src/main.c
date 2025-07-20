@@ -9,9 +9,11 @@
 char                     buffer[TEXT_BUFFER_SIZE]; // Buffer to hold note content
 extern enum menu_options options;                  // Current menu option
 extern WINDOW           *win_notes_names;          // Window for displaying notes list
+extern WINDOW           *win_text;                 // Window for displaying note content
 
 char       **file_names;               // Array to hold note filenames
 int          selected_index = 0;       // Current selected index in the notes list
+int          tools_selected = 0;       // Current selected index in the tools menu
 int          count          = 0;       // Number of notes
 int          running        = 1;       // Flag to control the main loop
 extern char *notes_dir_path;           // Path to the notes directory
@@ -94,6 +96,21 @@ void handle_key_press(int ch)
         {
             selected_index++;
         }
+        break;
+    case KEY_UP:
+        if (tools_selected > 0)
+        {
+            tools_selected--;
+        }
+        break;
+    case KEY_DOWN:
+        if (tools_selected < selected_count)
+        {
+            tools_selected++;
+        }
+        break;
+    case '\n':
+        handle_enter_key();
     }
 }
 
@@ -110,7 +127,8 @@ void redraw_ui()
     }
     ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
     ui_display_options();
-    ui_list_tools(0);
+    ui_list_tools(tools_selected);
+    refresh();
 }
 int refresh_notes_list()
 {
@@ -140,4 +158,41 @@ void add_note_to_list()
     ui_new_note(buffer, TEXT_BUFFER_SIZE);
 
     // Adjust selected index if necessary
+}
+void handle_enter_key()
+{
+
+    if (tools_selected == selected_editor)
+    {
+        if (count == 0)
+        {
+            return;
+        }
+        ui_edit_note(buffer, TEXT_BUFFER_SIZE);
+        notes_delete(file_names[selected_index]); // Delete the old note
+        if (notes_save(file_names[selected_index], buffer, notes_dir_path) == -1)
+        {
+            mvprintw(0, 0, "Error saving note: %s", strerror(errno));
+        }
+        else
+        {
+            mvprintw(0, 0, "Note saved successfully.");
+        }
+    }
+    else if (tools_selected == selected_viewer)
+    {
+        ui_draw_note(file_names[selected_index], buffer);
+    }
+    else if (tools_selected == selected_quit)
+    {
+        running = 0;
+    }
+    else if (tools_selected == selected_save)
+    {
+        notes_save(file_names[selected_index], buffer, notes_dir_path);
+    }
+    else if (tools_selected == selected_new_note)
+    {
+        add_note_to_list();
+    }
 }

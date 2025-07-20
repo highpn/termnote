@@ -4,7 +4,7 @@
 #include <ncurses.h>
 #include <string.h>
 #define TEXT_BUFFER_SIZE 4096
-char             *tools_[] = {"Edit Note", "View Note", "Save Note", "Quit"};
+char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note"};
 enum menu_options options;
 WINDOW           *win_text;
 WINDOW           *win_notes_names;
@@ -29,8 +29,8 @@ int               ui_init()
     wbkgd(win_notes_names, COLOR_PAIR(2));
     wbkgd(win_text, COLOR_PAIR(1));    // Set background color of window
     wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
-
-    wrefresh(win_tools);
+    wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
+    // wrefresh(win_tools);
 
     return 1;
 }
@@ -56,6 +56,7 @@ int ui_get_key()
 void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int selected, char *buffer)
 {
     werase(win_notes_names);
+    werase(win_text);
     wrefresh(win_text);
     box(win_notes_names, 0, 0);
     box(win_tools, 0, 0); // Optional border
@@ -63,7 +64,9 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
     if (count == 0)
     {
         mvwprintw(win_notes_names, 1, x, "No notes available.");
+        mvwprintw(win_text, 1, x, "No notes available.");
         wrefresh(win_notes_names);
+        wrefresh(win_text);
         return;
     }
     for (int i = 0; i < count; i++)
@@ -91,7 +94,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
     }
     else
     {
-
+        wclear(win_text);
         mvwprintw(win_text, 4, 4, "%s", buffer);
     }
     mvwprintw(win_text, 2, 2, "Note %s:", filenames[selected]);
@@ -109,9 +112,9 @@ void ui_list_tools(int selected)
     {
         if (i == selected)
         {
-            wattron(win_notes_names, A_REVERSE);
+            wattron(win_tools, A_REVERSE);
             mvwprintw(win_tools, y, 1, "%s", tools_[i]);
-            wattroff(win_notes_names, A_REVERSE);
+            wattroff(win_tools, A_REVERSE);
         }
         else
         {
@@ -132,14 +135,20 @@ void ui_edit_note(char *buffer, size_t bufsize)
     move(3, 0);
     clrtoeol();
     printw("Edit note: ");
-
+    memset(buffer, ' ', bufsize);
+    echo();
     getnstr(buffer, bufsize - 1);
+    noecho();
+    clear();
+    wclear(win_text);
     buffer[bufsize - 1] = '\0'; // Ensure null termination
     move(4, 0);
+    wprintw(win_text, "%s", buffer);
     wrefresh(win_text);
     wrefresh(win_notes_names);
     wrefresh(win_tools);
     refresh();
+    move(5, 0);
 }
 ui_draw_note(const char *title, const char *content)
 {
