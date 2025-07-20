@@ -193,6 +193,10 @@ void handle_enter_key()
     }
     else if (tools_selected == selected_save)
     {
+        if(count == 0)
+        {
+            return;
+        }
         notes_save(file_names[selected_index], buffer, notes_dir_path);
     }
     else if (tools_selected == selected_new_note)
