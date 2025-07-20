@@ -4,11 +4,18 @@
 #include <string.h>
 #include <errno.h>
 #define TEXT_BUFFER_SIZE 4096
+char *tools_[] = {
+    "Edit Note",
+    "View Note",
+    "Save Note",
+    "Quit"
+};
 enum menu_options options;
 WINDOW * win_text;
 WINDOW * win_notes_names;
 WINDOW * win_options;
 WINDOW * win_tools;
+extern char *notes_dir_path; // Path to the notes directory
 int ui_init() {
     initscr();
     cbreak();
@@ -69,7 +76,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
         x += strlen(filenames[i]) + 3;  // Adjust spacing
     }
     buffer=memset(buffer, 0, TEXT_BUFFER_SIZE);
-    strncpy(buffer,notes_load(filenames[selected], "notes"), TEXT_BUFFER_SIZE - 1);
+    strncpy(buffer,notes_load(filenames[selected], notes_dir_path), TEXT_BUFFER_SIZE - 1);
     (buffer)[TEXT_BUFFER_SIZE - 1] = '\0'; // Ensure null termination
 
     
@@ -77,11 +84,29 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
         wclear(win_text);
         mvwprintw(win_text, 4, 4,"No content available for this note.");
     } else {
-        mvwprintw(win_text, 2, 2,"Note %s:", filenames[selected]);
+        
         mvwprintw(win_text, 4, 4,"%s", buffer);
     }
+    mvwprintw(win_text, 2, 2,"Note %s:", filenames[selected]);
     wrefresh(win_notes_names);
     wrefresh(win_text);
+    wrefresh(win_tools);
+}
+void ui_list_tools(int selected){
+    werase(win_tools);
+    box(win_tools, 0, 0);
+    int y = 1;
+    mvwprintw(win_tools, 1, 1, "Tools");
+    for(int i = 0; i < sizeof(tools_) / sizeof(tools_[0]); i++) {
+    if (i == selected) {
+            wattron(win_notes_names, A_REVERSE);
+            mvwprintw(win_tools, y, 1, "%s",tools_[i]);
+            wattroff(win_notes_names, A_REVERSE);
+        } else {
+            mvwprintw(win_tools, y, 1, "%s", tools_[i]);
+        }
+        y++;
+    }
     wrefresh(win_tools);
 }
 
@@ -167,7 +192,7 @@ void ui_new_note(char *buffer, size_t bufsize) {
             buffer[pos] = '\0';
         }
     }
-    notes_save(buffer,"", "notes"); // Save the new note
+    notes_save(buffer,"", notes_dir_path); // Save the new note
     end:
     nodelay(stdscr, FALSE); // Restore blocking input
     curs_set(1);            // Show real cursor again

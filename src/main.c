@@ -14,6 +14,7 @@ char **file_names;// Array to hold note filenames
 int selected_index = 0; // Current selected index in the notes list
 int count = 0;  // Number of notes
 int running = 1; // Flag to control the main loop
+extern char *notes_dir_path; // Path to the notes directory
 void handle_key_press(int ch); // Function to handle key presses
 void delete_selected_note(); // Function to delete the selected note
 void redraw_ui();   // Function to redraw the UI    
@@ -21,6 +22,12 @@ int refresh_notes_list();   // Function to refresh the list of notes
 void delete_selected_note(); // Function to delete the selected note
 // Function to initialize the UI and load notes
 int main() {
+    
+    get_notes_dir();
+    if (notes_dir_path == NULL) {
+        fprintf(stderr, "Failed to get notes directory.\n");
+        return EXIT_FAILURE;
+    }
     if (!ui_init()) {
         return EXIT_FAILURE;
     }
@@ -93,9 +100,10 @@ void redraw_ui() {
     }
     ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
     ui_display_options();
+    ui_list_tools(0);
 }
 int refresh_notes_list() {
-    return notes_list(&file_names, &count, "notes");
+    return notes_list(&file_names, &count, notes_dir_path);
 }
 
 void delete_selected_note() {
