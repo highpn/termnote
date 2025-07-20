@@ -181,6 +181,10 @@ void handle_enter_key()
     }
     else if (tools_selected == selected_viewer)
     {
+        if (count == 0)
+        {
+            return;
+        }
         ui_draw_note(file_names[selected_index], buffer);
     }
     else if (tools_selected == selected_quit)
