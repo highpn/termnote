@@ -22,6 +22,7 @@ enum menu_options
     selected_quit,
     selected_save,
     selected_new_note,
+    selected_delete_note,
     selected_count
 }; // Menu options
 #endif

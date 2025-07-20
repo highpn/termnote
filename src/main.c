@@ -104,7 +104,7 @@ void handle_key_press(int ch)
         }
         break;
     case KEY_DOWN:
-        if (tools_selected < selected_count-1)
+        if (tools_selected < selected_count - 1)
         {
             tools_selected++;
         }
@@ -138,7 +138,10 @@ int refresh_notes_list()
 void delete_selected_note()
 {
     if (count == 0)
+    {
+        beep(); // No notes to delete
         return; // No notes to delete
+    }
     if (notes_delete(file_names[selected_index]) == -1)
     {
         printf("Error deleting note: %s\n", strerror(errno));
@@ -166,6 +169,7 @@ void handle_enter_key()
     {
         if (count == 0)
         {
+            beep();
             return;
         }
         ui_edit_note(buffer, TEXT_BUFFER_SIZE);
@@ -183,6 +187,7 @@ void handle_enter_key()
     {
         if (count == 0)
         {
+            beep();
             return;
         }
         ui_draw_note(file_names[selected_index], buffer);
@@ -193,8 +198,9 @@ void handle_enter_key()
     }
     else if (tools_selected == selected_save)
     {
-        if(count == 0)
+        if (count == 0)
         {
+            beep();
             return;
         }
         notes_save(file_names[selected_index], buffer, notes_dir_path);
@@ -202,5 +208,13 @@ void handle_enter_key()
     else if (tools_selected == selected_new_note)
     {
         add_note_to_list();
+    }
+    else if (tools_selected == selected_delete_note)
+    {
+        delete_selected_note();
+    }
+    else
+    {
+        mvprintw(0, 0, "Unknown tool selected.");
     }
 }

@@ -4,7 +4,7 @@
 #include <ncurses.h>
 #include <string.h>
 #define TEXT_BUFFER_SIZE 4096
-char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note"};
+char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note", "delete note"};
 enum menu_options options;
 WINDOW           *win_text;
 WINDOW           *win_notes_names;
@@ -23,7 +23,7 @@ int               ui_init()
     init_pair(1, COLOR_RED, COLOR_BLACK); // Pair #1: Red text on black backgro
     init_pair(2, COLOR_BLUE, COLOR_GREEN);
     win_text        = newwin(20, 50, 10, 10);
-    win_notes_names = newwin(5, 100, 0, 10);
+    win_notes_names = newwin(5, 100, 5, 10);
     win_options     = newwin(5, 100, 30, 10);
     win_tools       = newwin(20, 20, 10, 60);
     wbkgd(win_notes_names, COLOR_PAIR(2));
@@ -45,8 +45,8 @@ void ui_draw_input(const char *prefix, int ch)
 {
     move(0, 0);
     clrtoeol();
-    printw("%s%c", prefix, ch);
-    
+    // printw("%s%c", prefix, ch);
+
     refresh();
 }
 
@@ -58,7 +58,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
 {
     werase(win_notes_names);
     werase(win_text);
-    wrefresh(win_text);
+    // wrefresh(win_text);
     box(win_notes_names, 0, 0);
     box(win_tools, 0, 0); // Optional border
     int x = 2;
@@ -165,15 +165,16 @@ ui_draw_note(const char *title, const char *content)
         wbkgd(win_notes_names, COLOR_PAIR(1));
         wbkgd(win_options, COLOR_PAIR(1));
     }
-    box(win_text, 0, 0);        // Optional border
+    // box(win_text, 0, 0);        // Optional border
     box(win_notes_names, 0, 0); // Optional border
-    mvwprintw(win_notes_names, 1, 1, "Notes List");
+    // mvwprintw(win_notes_names, 1, 1, "Notes List");
     move(0, 0);
-    // clrtoeol();
+    clrtoeol();
     printw("Note: %s", title);
     move(0, 0);
     // clrtoeol();
-    wrefresh(win_text);
+
+    // wrefresh(win_text);
     wrefresh(win_notes_names);
     wrefresh(win_tools);
 }
