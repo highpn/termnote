@@ -7,7 +7,7 @@ $(error No suitable C compiler found (clang or gcc))
 endif
 
 CFLAGS = -Wall -Wextra -g -Iinclude
-LDFLAGS = -lncurses
+LDFLAGS = -lpanel -lncurses
 
 SRC = src/main.c src/ui.c src/notes.c src/poller.c
 OBJ = $(SRC:.c=.o)

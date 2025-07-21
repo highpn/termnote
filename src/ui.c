@@ -2,14 +2,20 @@
 #include "notes.h"
 #include <errno.h>
 #include <ncurses.h>
+#include <panel.h>
 #include <string.h>
 #define TEXT_BUFFER_SIZE 4096
+
+#define COLORS_PER_ROW 16
+#define COLOR_BOX_WIDTH 4
+#define COLOR_BOX_HEIGHT 1
 char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note", "delete note"};
 enum menu_options options;
 WINDOW           *win_text;
 WINDOW           *win_notes_names;
 WINDOW           *win_options;
 WINDOW           *win_tools;
+PANEL *panel_text;
 extern char      *notes_dir_path; // Path to the notes directory
 int               ui_init()
 {
@@ -22,16 +28,23 @@ int               ui_init()
     start_color();                        // Enable color functionality
     init_pair(1, COLOR_RED, COLOR_BLACK); // Pair #1: Red text on black backgro
     init_pair(2, COLOR_BLUE, COLOR_GREEN);
+    show_popup(  "Welcome to TermNote\n\n"
+    "A lightweight terminal-based note-taking application.\n"
+    "Create, view, and manage plain text notes quickly\n"
+    "without leaving the terminal.\n\n"
+    "Shortcuts:\n"
+    "Use arrow keys and Enter to navigate the interface.");
+    init_pair(10,COLOR_RED,show_color_popup());
     win_text        = newwin(20, 50, 10, 10);
     win_notes_names = newwin(5, 100, 5, 10);
     win_options     = newwin(5, 100, 30, 10);
     win_tools       = newwin(20, 20, 10, 60);
     wbkgd(win_notes_names, COLOR_PAIR(2));
-    wbkgd(win_text, COLOR_PAIR(1));    // Set background color of window
+    wbkgd(win_text, COLOR_PAIR(3));    // Set background color of window
     wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
     wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
+    
     // wrefresh(win_tools);
-
     return 1;
 }
 
@@ -156,14 +169,12 @@ ui_draw_note(const char *title, const char *content)
     if (options == selected_editor)
     {
         wbkgd(win_text, COLOR_PAIR(1));
-        wbkgd(win_notes_names, COLOR_PAIR(2));
-        wbkgd(win_options, COLOR_PAIR(1));
+        wbkgd(win_notes_names, COLOR_PAIR(3));
     }
     else
     {
         wbkgd(win_text, COLOR_PAIR(2));
-        wbkgd(win_notes_names, COLOR_PAIR(1));
-        wbkgd(win_options, COLOR_PAIR(1));
+        wbkgd(win_notes_names, COLOR_PAIR(3));
     }
     // box(win_text, 0, 0);        // Optional border
     box(win_notes_names, 0, 0); // Optional border
@@ -173,10 +184,11 @@ ui_draw_note(const char *title, const char *content)
     printw("Note: %s", title);
     move(0, 0);
     // clrtoeol();
-
+    //(win_options);
     // wrefresh(win_text);
     wrefresh(win_notes_names);
     wrefresh(win_tools);
+    wrefresh(win_options);
 }
 void ui_new_note(char *buffer, size_t bufsize)
 {
@@ -248,9 +260,99 @@ void ui_del_input(char *buffer)
     refresh();
 }
 void ui_display_options()
-{
-    werase(win_options);
+{   
     box(win_options, 0, 0);
     mvwprintw(win_options, 1, 1, "F1: New Note   F2: Delete Note   F3: Save Note   F4: Quit");
     wrefresh(win_options);
+}
+
+void show_popup(const char* message) {
+    int height = 40, width = 40;
+    int starty = (LINES - height) / 2;
+    int startx = (COLS - width) / 2;
+
+    WINDOW *popup_win = newwin(height, width, starty, startx);
+    PANEL *popup_panel = new_panel(popup_win); // Attach to panel system
+
+    box(popup_win, 0, 0);
+    mvwprintw(popup_win, 2, 2, message);
+    mvwprintw(popup_win, 4, 2, "Press any key to close...");
+    update_panels();
+    doupdate();
+
+    getch(); // Wait for input
+
+    // Clean up
+    del_panel(popup_panel);
+    delwin(popup_win);
+    update_panels();
+    doupdate();
+}
+int show_color_popup() {
+    int win_height = 20;
+    int win_width = COLORS_PER_ROW * COLOR_BOX_WIDTH + 4;
+    int starty = (LINES - win_height) / 2;
+    int startx = (COLS - win_width) / 2;
+
+    WINDOW *popup = newwin(win_height, win_width, starty, startx);
+    PANEL *panel = new_panel(popup);
+    keypad(popup, TRUE);
+    box(popup, 0, 0);
+    curs_set(0);
+    noecho();
+
+    // Initialize color pairs
+    start_color();
+    use_default_colors();
+    for (int i = 0; i < 256; i++) {
+        init_pair(i + 1, COLOR_BLACK, i);
+    }
+
+    int selected = 0;
+
+    while (1) {
+        // Draw color grid
+        for (int i = 0; i < 256; i++) {
+            int row = i / COLORS_PER_ROW;
+            int col = i % COLORS_PER_ROW;
+            int y = 2 + row * COLOR_BOX_HEIGHT;
+            int x = 2 + col * COLOR_BOX_WIDTH;
+
+            if (i == selected) {
+                wattron(popup, A_REVERSE);
+            }
+            wattron(popup, COLOR_PAIR(i + 1));
+            mvwprintw(popup, y, x, " %3d", i);
+            wattroff(popup, COLOR_PAIR(i + 1));
+            if (i == selected) {
+                wattroff(popup, A_REVERSE);
+            }
+        }
+
+        // Preview selected color
+        mvwprintw(popup, win_height - 2, 2, "Selected color: %3d ", selected);
+        wattron(popup, COLOR_PAIR(selected + 1));
+        mvwprintw(popup, win_height - 2, 25, "     ");
+        wattroff(popup, COLOR_PAIR(selected + 1));
+
+        update_panels();
+        doupdate();
+
+        int ch = wgetch(popup);
+        if (ch == '\n') break;
+        else if (ch == KEY_LEFT && selected % COLORS_PER_ROW > 0)
+            selected--;
+        else if (ch == KEY_RIGHT && selected % COLORS_PER_ROW < COLORS_PER_ROW - 1)
+            selected++;
+        else if (ch == KEY_UP && selected >= COLORS_PER_ROW)
+            selected -= COLORS_PER_ROW;
+        else if (ch == KEY_DOWN && selected < 256 - COLORS_PER_ROW)
+            selected += COLORS_PER_ROW;
+    }
+
+    del_panel(panel);
+    delwin(popup);
+    update_panels();
+    doupdate();
+    return selected;
 }
