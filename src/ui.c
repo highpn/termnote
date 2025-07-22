@@ -9,7 +9,7 @@
 #define COLORS_PER_ROW 16
 #define COLOR_BOX_WIDTH 4
 #define COLOR_BOX_HEIGHT 1
-char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note", "delete note"};
+char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note","delete note" ,"change color"    }; 
 enum menu_options options;
 WINDOW           *win_text;
 WINDOW           *win_notes_names;
@@ -17,6 +17,8 @@ WINDOW           *win_options;
 WINDOW           *win_tools;
 PANEL *panel_text;
 extern char      *notes_dir_path; // Path to the notes directory
+void ui_draw_note(const char *title, const char *content);
+void show_popup(const char*);
 int               ui_init()
 {
     initscr();
@@ -26,21 +28,21 @@ int               ui_init()
     keypad(stdscr, TRUE);
     curs_set(0);
     start_color();                        // Enable color functionality
-    init_pair(1, COLOR_RED, COLOR_BLACK); // Pair #1: Red text on black backgro
-    init_pair(2, COLOR_BLUE, COLOR_GREEN);
+    init_pair(1, COLOR_BLUE, COLOR_BLACK); // Pair #1: Red text on black backgro
+    init_pair(2, COLOR_BLUE, COLOR_BLACK);
     show_popup(  "Welcome to TermNote\n\n"
     "A lightweight terminal-based note-taking application.\n"
     "Create, view, and manage plain text notes quickly\n"
     "without leaving the terminal.\n\n"
     "Shortcuts:\n"
     "Use arrow keys and Enter to navigate the interface.");
-    init_pair(10,COLOR_RED,show_color_popup());
+    init_pair(10,COLOR_WHITE,show_color_popup());
     win_text        = newwin(20, 50, 10, 10);
     win_notes_names = newwin(5, 100, 5, 10);
     win_options     = newwin(5, 100, 30, 10);
     win_tools       = newwin(20, 20, 10, 60);
     wbkgd(win_notes_names, COLOR_PAIR(2));
-    wbkgd(win_text, COLOR_PAIR(3));    // Set background color of window
+    wbkgd(win_text, COLOR_PAIR(10));    // Set background color of window
     wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
     wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
     
@@ -164,16 +166,16 @@ void ui_edit_note(char *buffer, size_t bufsize)
     refresh();
     move(0, 0);
 }
-ui_draw_note(const char *title, const char *content)
+void ui_draw_note(const char *title, const char *content)
 {
     if (options == selected_editor)
     {
-        wbkgd(win_text, COLOR_PAIR(1));
+        wbkgd(win_text, COLOR_PAIR(10));
         wbkgd(win_notes_names, COLOR_PAIR(3));
     }
     else
     {
-        wbkgd(win_text, COLOR_PAIR(2));
+        wbkgd(win_text, COLOR_PAIR(10));
         wbkgd(win_notes_names, COLOR_PAIR(3));
     }
     // box(win_text, 0, 0);        // Optional border
@@ -331,6 +333,9 @@ int show_color_popup() {
 
         // Preview selected color
         mvwprintw(popup, win_height - 2, 2, "Selected color: %3d ", selected);
+        init_pair(10,COLOR_WHITE,selected);
+        wbkgdset(win_text,10);
+        wrefresh(win_text); 
         wattron(popup, COLOR_PAIR(selected + 1));
         mvwprintw(popup, win_height - 2, 25, "     ");
         wattroff(popup, COLOR_PAIR(selected + 1));
@@ -355,4 +360,7 @@ int show_color_popup() {
     update_panels();
     doupdate();
     return selected;
+}
+change_color(){
+    init_pair(10, COLOR_WHITE,show_color_popup());
 }

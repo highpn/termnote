@@ -7,7 +7,6 @@ void ui_draw_header(const char *title);
 void ui_draw_input(const char *prefix, int ch);
 int  ui_get_key();
 void ui_cleanup();
-void ui_draw_note(const char *title, const char *content); // Display note content
 void ui_edit_note(char *buffer, size_t bufsize);           // Simple line editor (raw mode)
 void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int selected,
                    char *buffer);               // Display file list menu
@@ -23,6 +22,7 @@ enum menu_options
     selected_save,
     selected_new_note,
     selected_delete_note,
+    selected_change_color,
     selected_count
 }; // Menu options
 #endif

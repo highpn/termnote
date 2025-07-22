@@ -22,6 +22,9 @@ void         delete_selected_note();   // Function to delete the selected note
 void         redraw_ui();              // Function to redraw the UI
 int          refresh_notes_list();     // Function to refresh the list of notes
 void         delete_selected_note();   // Function to delete the selected note
+void handle_enter_key();
+void add_note_to_list();
+
 // Function to initialize the UI and load notes
 int main()
 {
@@ -212,6 +215,9 @@ void handle_enter_key()
     else if (tools_selected == selected_delete_note)
     {
         delete_selected_note();
+    }
+    else if (tools_selected == selected_change_color){
+        change_color();
     }
     else
     {
