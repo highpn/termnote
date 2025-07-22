@@ -1,7 +1,7 @@
 [
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/clang",
       "-Wall",
       "-Wextra",
       "-g",
@@ -11,24 +11,24 @@
       "src/main.o",
       "src/main.c"
     ],
-    "directory": "/home/marci/termnote",
-    "file": "/home/marci/termnote/src/main.c",
-    "output": "/home/marci/termnote/src/main.o"
+    "directory": "/home/marci/optio_calc",
+    "file": "/home/marci/optio_calc/src/main.c",
+    "output": "/home/marci/optio_calc/src/main.o"
   },
   {
     "arguments": [
-      "/usr/bin/gcc",
+      "/usr/bin/clang",
       "-Wall",
       "-Wextra",
       "-g",
       "-Iinclude",
       "-c",
       "-o",
-      "src/ui.o",
-      "src/ui.c"
+      "src/option.o",
+      "src/option.c"
     ],
-    "directory": "/home/marci/termnote",
-    "file": "/home/marci/termnote/src/ui.c",
-    "output": "/home/marci/termnote/src/ui.o"
+    "directory": "/home/marci/optio_calc",
+    "file": "/home/marci/optio_calc/src/option.c",
+    "output": "/home/marci/optio_calc/src/option.o"
   }
 ]

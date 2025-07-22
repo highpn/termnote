@@ -28,8 +28,8 @@ int               ui_init()
     keypad(stdscr, TRUE);
     curs_set(0);
     start_color();                        // Enable color functionality
-    init_pair(1, COLOR_BLUE, COLOR_BLACK); // Pair #1: Red text on black backgro
-    init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(1, COLOR_BLUE, COLOR_RED); // Pair #1: Red text on black backgro
+    init_pair(2, COLOR_BLUE, COLOR_RED);
     show_popup(  "Welcome to TermNote\n\n"
     "A lightweight terminal-based note-taking application.\n"
     "Create, view, and manage plain text notes quickly\n"
@@ -46,7 +46,8 @@ int               ui_init()
     wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
     wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
     
-    // wrefresh(win_tools);
+    wrefresh(win_options);
+    wrefresh(win_tools);
     return 1;
 }
 
@@ -171,12 +172,12 @@ void ui_draw_note(const char *title, const char *content)
     if (options == selected_editor)
     {
         wbkgd(win_text, COLOR_PAIR(10));
-        wbkgd(win_notes_names, COLOR_PAIR(3));
+        wbkgd(win_notes_names, COLOR_PAIR(2));
     }
     else
     {
         wbkgd(win_text, COLOR_PAIR(10));
-        wbkgd(win_notes_names, COLOR_PAIR(3));
+        wbkgd(win_notes_names, COLOR_PAIR(2));
     }
     // box(win_text, 0, 0);        // Optional border
     box(win_notes_names, 0, 0); // Optional border
@@ -312,7 +313,7 @@ int show_color_popup() {
 
     int selected = 0;
 
-    while (1) {
+    for(;;){
         // Draw color grid
         for (int i = 0; i < 256; i++) {
             int row = i / COLORS_PER_ROW;

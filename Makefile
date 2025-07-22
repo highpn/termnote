@@ -7,9 +7,9 @@ $(error No suitable C compiler found (clang or gcc))
 endif
 
 CFLAGS = -Wall -Wextra -g -Iinclude
-LDFLAGS = -lpanel -lncurses
+LDFLAGS = -lm -lpanel -lncurses
 
-SRC = src/main.c src/ui.c src/notes.c src/poller.c
+SRC = src/main.c src/ui.c src/notes.c src/poller.c src/option.c
 OBJ = $(SRC:.c=.o)
 BIN = termnote
 

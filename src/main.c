@@ -1,6 +1,7 @@
 #include "notes.h"
 #include "poller.h"
 #include "ui.h"
+#include "option.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,22 @@ void add_note_to_list();
 // Function to initialize the UI and load notes
 int main()
 {
+// Example: American put
+    double S = 7;
+    double K = 6;
+    double T = (2.0/356.0);
+    double r = 0.0435;
+    double sigma = 0.62;
+    int steps = 1000;
 
+    double call_price = binomial_american_option(S, K, T, r, sigma, steps, "call");
+    double put_price  = binomial_american_option(S, K, T, r, sigma, steps, "put");
+
+    printf("American Call Option Price: %.4f\n", call_price);
+    printf("American Put Option Price:  %.4f\n", put_price);
+
+    return 0;
+          
     get_notes_dir();
     if (notes_dir_path == NULL)
     {
