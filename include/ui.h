@@ -14,6 +14,10 @@ void ui_del_input(char *buffer);                // Clear input buffer
 void ui_display_options();                      // Display options menu
 void ui_list_tools(int selected);               // Display tools menu
 void ui_new_note(char *buffer, size_t bufsize); // Create a new note
+void ui_init_win_options(void);
+void ui_init_win_options_titles(WINDOW *win,int n);
+enum option_params{option_type,strike_price,stock_price,time_to_expiry,volatility,interest_rate,premium,option_param_count};
+
 enum menu_options
 {
     selected_viewer,

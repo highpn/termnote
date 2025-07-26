@@ -4,6 +4,7 @@
 #include <ncurses.h>
 #include <panel.h>
 #include <string.h>
+#include <math.h>
 #define TEXT_BUFFER_SIZE 4096
 
 #define COLORS_PER_ROW 16
@@ -15,14 +16,21 @@ WINDOW           *win_text;
 WINDOW           *win_notes_names;
 WINDOW           *win_options;
 WINDOW           *win_tools;
+WINDOW           *win_graph;
+
+WINDOW *win_option_params[7];
+enum option_params params;
 PANEL *panel_text;
 extern char      *notes_dir_path; // Path to the notes directory
 void ui_draw_note(const char *title, const char *content);
 void show_popup(const char*);
-int               ui_init()
+MEVENT event;
+int * graph_x2(int);
+int ui_init()
 {
     initscr();
     cbreak();
+    mousemask(ALL_MOUSE_EVENTS | REPORT_MOUSE_POSITION, NULL); // Enable mouse events
     noecho();
     noqiflush();
     keypad(stdscr, TRUE);
@@ -30,24 +38,34 @@ int               ui_init()
     start_color();                        // Enable color functionality
     init_pair(1, COLOR_BLUE, COLOR_RED); // Pair #1: Red text on black backgro
     init_pair(2, COLOR_BLUE, COLOR_RED);
+    /*
     show_popup(  "Welcome to TermNote\n\n"
     "A lightweight terminal-based note-taking application.\n"
     "Create, view, and manage plain text notes quickly\n"
     "without leaving the terminal.\n\n"
     "Shortcuts:\n"
     "Use arrow keys and Enter to navigate the interface.");
+    */
     init_pair(10,COLOR_WHITE,show_color_popup());
-    win_text        = newwin(20, 50, 10, 10);
-    win_notes_names = newwin(5, 100, 5, 10);
-    win_options     = newwin(5, 100, 30, 10);
-    win_tools       = newwin(20, 20, 10, 60);
-    wbkgd(win_notes_names, COLOR_PAIR(2));
-    wbkgd(win_text, COLOR_PAIR(10));    // Set background color of window
-    wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
-    wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
-    
-    wrefresh(win_options);
-    wrefresh(win_tools);
+    win_graph = newwin(20, 50, 5, 75);
+    //win_text        = newwin(20, 50, 10, 10);
+    //win_notes_names = newwin(5, 100, 5, 10);
+   // win_options     = newwin(5, 100, 30, 10);
+    //win_tools       = newwin(20, 20, 10, 60);
+    //wbkgd(win_notes_names, COLOR_PAIR(2));
+    //wbkgd(win_text, COLOR_PAIR(10));    // Set background color of window
+    //wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
+    //wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
+    box(win_graph,0,0);
+     
+    ui_init_win_options();
+    int returns[] = {1,2,3,4,5, 6, 7, 8,9,10,5,4,3,2,1};
+    int count = sizeof(returns)/sizeof(returns[0]);
+    int *y=graph_x2(50);
+    draw_graph(y,50);
+    wrefresh(win_graph);    
+    //wrefresh(win_options);
+    //wrefresh(win_tools);
     return 1;
 }
 
@@ -59,7 +77,7 @@ void ui_draw_header(const char *title)
 
 void ui_draw_input(const char *prefix, int ch)
 {
-    move(0, 0);
+   // move(0, 0);
     clrtoeol();
     // printw("%s%c", prefix, ch);
 
@@ -83,7 +101,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
         mvwprintw(win_notes_names, 1, x, "No notes available.");
         mvwprintw(win_text, 1, x, "No notes available.");
         wrefresh(win_notes_names);
-        wrefresh(win_text);
+        //wrefresh(win_text);
         return;
     }
     for (int i = 0; i < count; i++)
@@ -116,7 +134,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
     }
     mvwprintw(win_text, 2, 2, "Note %s:", filenames[selected]);
     wrefresh(win_notes_names);
-    wrefresh(win_text);
+    //wrefresh(win_text);
     wrefresh(win_tools);
 }
 void ui_list_tools(int selected)
@@ -149,7 +167,7 @@ void ui_cleanup()
 
 void ui_edit_note(char *buffer, size_t bufsize)
 {
-    move(0, 0);
+    //move(0, 0);
     clrtoeol();
     printw("Edit note: ");
     memset(buffer, ' ', bufsize);
@@ -161,7 +179,7 @@ void ui_edit_note(char *buffer, size_t bufsize)
     buffer[bufsize - 1] = '\0'; // Ensure null termination
     move(0, 0);
     wprintw(win_text, "%s", buffer);
-    wrefresh(win_text);
+    //wrefresh(win_text);
     wrefresh(win_notes_names);
     wrefresh(win_tools);
     refresh();
@@ -182,10 +200,10 @@ void ui_draw_note(const char *title, const char *content)
     // box(win_text, 0, 0);        // Optional border
     box(win_notes_names, 0, 0); // Optional border
     // mvwprintw(win_notes_names, 1, 1, "Notes List");
-    move(0, 0);
+    //move(0, 0);
     clrtoeol();
-    printw("Note: %s", title);
-    move(0, 0);
+    //printw("Note: %s", title);
+    //move(0, 0);
     // clrtoeol();
     //(win_options);
     // wrefresh(win_text);
@@ -336,7 +354,7 @@ int show_color_popup() {
         mvwprintw(popup, win_height - 2, 2, "Selected color: %3d ", selected);
         init_pair(10,COLOR_WHITE,selected);
         wbkgdset(win_text,10);
-        wrefresh(win_text); 
+        //wrefresh(win_text); 
         wattron(popup, COLOR_PAIR(selected + 1));
         mvwprintw(popup, win_height - 2, 25, "     ");
         wattroff(popup, COLOR_PAIR(selected + 1));
@@ -364,4 +382,116 @@ int show_color_popup() {
 }
 change_color(){
     init_pair(10, COLOR_WHITE,show_color_popup());
+}
+
+void ui_init_win_options(){
+    for(int i=0;i<option_param_count;i++){
+        win_option_params[i]=newwin(5,40,2+i*5,10);
+        
+        //box(win_option_params[i],0,0);
+        wbkgd(win_option_params[i],COLOR_PAIR(2));
+        box(win_option_params[i],0,0);
+        ui_init_win_options_titles(win_option_params[i],i);
+        wrefresh(win_option_params[i]);
+    }
+}
+void ui_init_win_options_titles(WINDOW*win,int n){
+    switch(n){
+        case option_type :
+            mvwprintw(win,1,1,"option type");
+            break;
+        case strike_price:
+            mvwprintw(win,1,1,"strike price");
+            break;
+        case stock_price :
+            mvwprintw(win,1,1,"stock price");
+            break;
+        case time_to_expiry :
+            mvwprintw(win,1,1,"time to expiry");
+            break;
+        case volatility :
+            mvwprintw(win,1,1,"volatility");
+            break;
+        case interest_rate:
+            mvwprintw(win,1,1,"interest rate");
+            break;
+        case premium:
+            mvwprintw(win,1,1,"premium");
+            break;
+    }
+}
+
+void ui_list_option_params(int selected)
+{   
+      
+    char buff[10];
+    int y = 1;
+    mvwprintw(win_tools, 1, 1, "Tools");
+    for (int i = 0; i < option_param_count; i++)
+    {   werase(win_option_params[i]);
+        
+        if (i == selected)
+        {   box(win_option_params[i],0,0);
+            wattr_on(win_option_params[i],A_UNDERLINE | A_REVERSE ,0);
+            curs_set(1);
+            echo();
+            
+            move(i*5+5,20);
+            int x,y;
+            wmouse_trafo(win_option_params[i],&x,&y,true);
+            printw("%d %d",x,y);
+        }
+        else
+        {
+            wattr_off(win_option_params[i],A_UNDERLINE | A_REVERSE ,0);
+        }
+        
+        ui_init_win_options_titles(win_option_params[i],i);
+        wrefresh(win_option_params[i]);
+    }
+}
+
+
+
+void draw_graph(int *data, int n) {
+       int max_y, max_x;
+    getmaxyx(win_graph, max_y, max_x);
+
+    float max_val = data[0], min_val = data[0];
+    for (int i = 1; i < n; i++) {
+        if (data[i] > max_val) max_val = data[i];
+        if (data[i] < min_val) min_val = data[i];
+    }
+
+    float range = max_val - min_val;
+    if (range == 0) range = 1;
+
+    int prev_y = 0;
+    for (int i = 0; i < n && i < max_x; i++) {
+        int y = max_y - 1 - round((data[i] - min_val) * (max_y - 1) / range);
+
+        if (i > 0) {
+            int dy = y - prev_y;
+            int dx = 1;
+
+            for (int j = 0; j <= abs(dy); j++) {
+                int interp_y = prev_y + (dy > 0 ? j : -j);
+                mvwaddch(win_graph,interp_y, i - 1 + j * dx / abs(dy), dy > 0 ? '╱' : '╲');
+            }
+        }
+
+        mvwaddch(win_graph,y, i, '●'); // data point
+        prev_y = y;
+    }
+
+    refresh();
+}
+
+
+int * graph_x2(int n){
+    int *x2=(int*)malloc(sizeof(int)*(n+1));
+    for(int i=0;i<n+1;i++){
+        x2[i]=pow(-n/2+i-40,2);
+    }
+    return x2;
 }
