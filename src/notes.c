@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 #define TEXT_BUFFER_SIZE 4096
 #define NOTES_APP_DIR "/notes"
 char *notes_dir_path;
@@ -208,8 +209,18 @@ char *get_notes_dir()
     }
     else
     {
+        char buffer[PATH_MAX];
+        if (getcwd(buffer, sizeof(buffer)) != NULL)
+        {
+            path = malloc(strlen(buffer) + sizeof(NOTES_APP_DIR));
+            sprintf(path, "%s%s", buffer, NOTES_APP_DIR);
+            path[strlen(path)] = '\0'; // Ensure null termination
+        }
+
+
+
         fprintf(stderr, "Cannot determine home directory.\n");
-        return NULL;
+        
     }
 
     // Create directory if it doesn't exist

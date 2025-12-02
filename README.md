@@ -22,12 +22,11 @@
 
 ### Dependencies
 #### Ubuntu/Debian:
-sudo apt-get update&&sudo apt-get install libncurses5-dev libncursesw5-dev libpanel-dev
+sudo apt-get install libncurses5-dev libncursesw5-dev
 #### Fedora/CentOS:
-sudo dnf install ncurses-devel ncurses-terminfo ncurses-compat-libs-devel&&sudo dnf install ncurses-panel-devel
+sudo dnf install ncurses-devel
 #### Arch Linux:
-Use the following command to install ncurses and the panel development files:
-
+sudo pacman -Syu ncurses
 
 
 - `ncurses`
