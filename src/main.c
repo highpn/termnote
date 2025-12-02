@@ -1,6 +1,7 @@
-#include "notes.h"
-#include "poller.h"
-#include "ui.h"
+#include "../include/notes.h"
+#include "../include/poller.h"
+#include "../include/ui.h"
+#include "../include/system.h"
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
