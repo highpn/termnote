@@ -155,7 +155,7 @@ int notes_list(char ***filenames, int *count, const char *dir_name)
 
     return 0;
 }
-notes_delete(const char *filename)
+int notes_delete(const char *filename)
 {
     DIR *dirp = opendir(notes_dir_path);
     if (dirp == NULL)

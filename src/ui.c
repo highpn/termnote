@@ -4,6 +4,7 @@
 #include <ncurses.h>
 #include <panel.h>
 #include <string.h>
+#include <unistd.h>
 #define TEXT_BUFFER_SIZE 4096
 
 #define COLORS_PER_ROW 16
@@ -17,7 +18,6 @@ WINDOW           *win_options;
 WINDOW           *win_tools;
 PANEL *panel_text;
 extern char      *notes_dir_path; // Path to the notes directory
-void ui_draw_note(const char *title, const char *content);
 void show_popup(const char*);
 int               ui_init()
 {
@@ -361,6 +361,6 @@ int show_color_popup() {
     doupdate();
     return selected;
 }
-change_color(){
+void change_color(void){
     init_pair(10, COLOR_WHITE,show_color_popup());
 }

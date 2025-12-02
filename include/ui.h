@@ -14,6 +14,10 @@ void ui_del_input(char *buffer);                // Clear input buffer
 void ui_display_options();                      // Display options menu
 void ui_list_tools(int selected);               // Display tools menu
 void ui_new_note(char *buffer, size_t bufsize); // Create a new note
+void ui_draw_note(const char *title, const char *content);
+//color
+void change_color(void);
+int show_color_popup(void);
 enum menu_options
 {
     selected_viewer,
