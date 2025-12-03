@@ -150,23 +150,56 @@ void ui_cleanup()
 
 void ui_edit_note(char *buffer, size_t bufsize)
 {
-    move(0, 0);
-    clrtoeol();
-    printw("Edit note: ");
-    memset(buffer, ' ', bufsize);
-    echo();
-    getnstr(buffer, bufsize - 1);
-    noecho();
+   int pos = strlen(buffer); // Start at end of existing text
+    int ch;
+    int blink = 1;
+
+    nodelay(stdscr, TRUE); // Non-blocking input
+    curs_set(0);           // Hide real cursor
+
+    while (1) {
+        // Draw prompt and current buffer content
+        move(0, 0);
+        clrtoeol();
+        printw("Edit note: ");
+        addnstr(buffer, pos);
+
+        // Draw blinking underscore at the current position
+        move(0, 11 + pos); // 11 = length of "Edit note: "
+        addch(blink ? '_' : ' ');
+
+        refresh();
+        blink = !blink;    // Toggle blink
+        usleep(30000);     // ~30ms blink interval
+
+        // Handle input
+        ch = getch();
+        if (ch == ERR) continue; // No input
+        if (ch == 27) break;     // Escape to cancel
+        if (ch == '\n') break;   // Enter to finish
+
+        if (ch == KEY_BACKSPACE || ch == 127) {
+            if (pos > 0) {
+                pos--;
+                buffer[pos] = '\0';
+            }
+        } else if (pos < bufsize - 1 && ch >= 32 && ch <= 126) {
+            buffer[pos++] = (char)ch;
+            buffer[pos] = '\0';
+        }
+    }
+
+    nodelay(stdscr, FALSE); // Restore blocking input
+    curs_set(1);            // Show real cursor
+
+    // Clear and refresh display
     clear();
     wclear(win_text);
-    buffer[bufsize - 1] = '\0'; // Ensure null termination
-    move(0, 0);
     wprintw(win_text, "%s", buffer);
     wrefresh(win_text);
     wrefresh(win_notes_names);
     wrefresh(win_tools);
     refresh();
-    move(0, 0);
 }
 void ui_draw_note(const char *title, const char *content)
 {

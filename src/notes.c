@@ -66,41 +66,35 @@ int notes_save(const char *filename, const char *text, const char *dir_name)
 // Load a single note
 char *notes_load(const char *filename, const char *dir_name)
 {
-    DIR *dirp;
-    if (NULL == (dirp = opendir(dir_name)))
-    {
-        return NULL;
-    }
-    int fd;
-    if ((fd = openat(dirfd(dirp), filename, O_RDONLY)) == -1)
-    {
-        close(fd);
-        closedir(dirp);
-        return NULL;
-    }
-    static char buffer[TEXT_BUFFER_SIZE];
-    memset(buffer, 0, TEXT_BUFFER_SIZE); // Clear buffer
-    int n;
-    if ((n = read(fd, buffer, TEXT_BUFFER_SIZE - 1)) == -1)
-    {
-        close(fd);
-        closedir(dirp);
-        return NULL;
-    }
-    buffer[n] = 0;
-    close(fd);
-    closedir(dirp);
+    char path[PATH_MAX];
+    snprintf(path, sizeof(path), "%s/%s", dir_name, filename);
+
+    FILE *f = fopen(path, "r");
+    if (!f) return NULL;
+
+    fseek(f, 0, SEEK_END);
+    long len = ftell(f);
+    rewind(f);
+
+    char *buffer = malloc(len + 1);
+    if (!buffer) { fclose(f); return NULL; }
+
+    fread(buffer, 1, len, f);
+    buffer[len] = '\0';
+    fclose(f);
     return buffer;
 }
 
 // List all note filenames
 int notes_list(char ***filenames, int *count, const char *dir_name)
 {
-    DIR           *dirp;
+   
+    *filenames = NULL;
+    
+    *count = 0;
+    
     struct dirent *dir;
-    int            temp_count = 0;
-    char           names[100][256];
-
+    DIR           *dirp;
     dirp = opendir(dir_name);
     if (dirp == NULL)
         return -1;
@@ -109,50 +103,12 @@ int notes_list(char ***filenames, int *count, const char *dir_name)
     {
         if (dir->d_name[0] != '.')
         {
-            strncpy(names[temp_count], dir->d_name, 255);
-            names[temp_count][255] = '\0';
-            temp_count++;
-            if (temp_count >= 100)
-                break;
+            *filenames = realloc(*filenames, (*count + 1) * sizeof(char *));
+            (*filenames)[*count] = strdup(dir->d_name);
+            (*count)++;
         }
     }
     closedir(dirp);
-
-    if (*filenames != NULL && *count > 0)
-    {
-        for (int i = 0; i < *count; i++)
-        {
-            free((*filenames)[i]);
-        }
-        free(*filenames);
-        *filenames = NULL;
-    }
-
-    *count = temp_count; // Now safe to update
-
-    if (*count == 0)
-    {
-        *filenames = NULL;
-        return 0;
-    }
-
-    *filenames = malloc(sizeof(char *) * (*count));
-    if (*filenames == NULL)
-        return -1;
-
-    for (int i = 0; i < *count; i++)
-    {
-        (*filenames)[i] = malloc(strlen(names[i]) + 1);
-        if ((*filenames)[i] == NULL)
-        {
-            for (int j = 0; j < i; j++)
-                free((*filenames)[j]);
-            free(*filenames);
-            *filenames = NULL;
-            return -1;
-        }
-        strcpy((*filenames)[i], names[i]);
-    }
 
     return 0;
 }
