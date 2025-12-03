@@ -2,6 +2,7 @@
 #define UI_H
 #include <ncurses.h>
 #include <stddef.h>
+
 int  ui_init();
 void ui_draw_header(const char *title);
 void ui_draw_input(const char *prefix, int ch);
@@ -18,6 +19,9 @@ void ui_draw_note(const char *title, const char *content);
 //color
 void change_color(void);
 int show_color_popup(void);
+int show_color_popup_text(void);
+void change_text_color(void);
+
 enum menu_options
 {
     selected_viewer,
@@ -27,6 +31,7 @@ enum menu_options
     selected_new_note,
     selected_delete_note,
     selected_change_color,
+    selected_change_text_color,
     selected_count
 }; // Menu options
 #endif

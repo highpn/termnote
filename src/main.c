@@ -220,6 +220,9 @@ void handle_enter_key()
     else if (tools_selected == selected_change_color){
         change_color();
     }
+    else if (tools_selected == selected_change_text_color){
+        change_text_color();
+    }
     else
     {
         mvprintw(0, 0, "Unknown tool selected.");

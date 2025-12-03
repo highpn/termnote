@@ -10,7 +10,9 @@
 #define COLORS_PER_ROW 16
 #define COLOR_BOX_WIDTH 4
 #define COLOR_BOX_HEIGHT 1
-char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note","delete note" ,"change color"    }; 
+int background_color;
+int text_color;
+char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note","delete note" ,"change color","change text color"    }; 
 enum menu_options options;
 WINDOW           *win_text;
 WINDOW           *win_notes_names;
@@ -36,13 +38,13 @@ int               ui_init()
     "without leaving the terminal.\n\n"
     "Shortcuts:\n"
     "Use arrow keys and Enter to navigate the interface.");
-    init_pair(10,COLOR_WHITE,show_color_popup());
+    init_pair(21,COLOR_WHITE,show_color_popup());
     win_text        = newwin(20, 50, 10, 10);
     win_notes_names = newwin(5, 100, 5, 10);
     win_options     = newwin(5, 100, 30, 10);
     win_tools       = newwin(20, 20, 10, 60);
     wbkgd(win_notes_names, COLOR_PAIR(2));
-    wbkgd(win_text, COLOR_PAIR(10));    // Set background color of window
+    wbkgd(win_text, COLOR_PAIR(21));    // Set background color of window
     wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
     wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
     
@@ -170,12 +172,12 @@ void ui_draw_note(const char *title, const char *content)
 {
     if (options == selected_editor)
     {
-        wbkgd(win_text, COLOR_PAIR(10));
+        wbkgd(win_text, COLOR_PAIR(21));
         wbkgd(win_notes_names, COLOR_PAIR(3));
     }
     else
     {
-        wbkgd(win_text, COLOR_PAIR(10));
+        wbkgd(win_text, COLOR_PAIR(21));
         wbkgd(win_notes_names, COLOR_PAIR(3));
     }
     // box(win_text, 0, 0);        // Optional border
@@ -307,7 +309,7 @@ int show_color_popup() {
     start_color();
     use_default_colors();
     for (int i = 0; i < 256; i++) {
-        init_pair(i + 1, COLOR_BLACK, i);
+        init_pair(i + 1, text_color, i);
     }
 
     int selected = 0;
@@ -333,12 +335,17 @@ int show_color_popup() {
 
         // Preview selected color
         mvwprintw(popup, win_height - 2, 2, "Selected color: %3d ", selected);
-        init_pair(10,COLOR_WHITE,selected);
-        wbkgdset(win_text,10);
+        init_pair(21,text_color,selected);
+        wbkgdset(win_text,COLOR_PAIR(21));
+        wbkgd(win_notes_names, COLOR_PAIR(2));
+    
+        wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
+        wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
         wrefresh(win_text); 
         wattron(popup, COLOR_PAIR(selected + 1));
         mvwprintw(popup, win_height - 2, 25, "     ");
         wattroff(popup, COLOR_PAIR(selected + 1));
+                wrefresh(stdscr); 
 
         update_panels();
         doupdate();
@@ -359,8 +366,91 @@ int show_color_popup() {
     delwin(popup);
     update_panels();
     doupdate();
+    background_color = selected;
+    return selected;
+}
+int show_color_popup_text() {
+    int win_height = 20;
+    int win_width = COLORS_PER_ROW * COLOR_BOX_WIDTH + 4;
+    int starty = (LINES - win_height) / 2;
+    int startx = (COLS - win_width) / 2;
+
+    WINDOW *popup = newwin(win_height, win_width, starty, startx);
+    PANEL *panel = new_panel(popup);
+    keypad(popup, TRUE);
+    box(popup, 0, 0);
+    curs_set(0);
+    noecho();
+
+    // Initialize color pairs
+    start_color();
+    use_default_colors();
+    for (int i = 0; i < 256; i++) {
+        init_pair(i + 1,background_color,i);
+    }
+
+    int selected = 0;
+
+    while (1) {
+        // Draw color grid
+        for (int i = 0; i < 256; i++) {
+            int row = i / COLORS_PER_ROW;
+            int col = i % COLORS_PER_ROW;
+            int y = 2 + row * COLOR_BOX_HEIGHT;
+            int x = 2 + col * COLOR_BOX_WIDTH;
+
+            if (i == selected) {
+                wattron(popup, A_REVERSE);
+            }
+            wattron(popup, COLOR_PAIR(i + 1));
+            mvwprintw(popup, y, x, " %3d", i);
+            wattroff(popup, COLOR_PAIR(i + 1));
+            if (i == selected) {
+                wattroff(popup, A_REVERSE);
+            }
+        }
+
+        // Preview selected color
+        mvwprintw(popup, win_height - 2, 2, "Selected color: %3d ", selected);
+        init_pair(21,selected,background_color);
+        wbkgdset(win_text,COLOR_PAIR(21));
+        
+        wbkgdset(win_notes_names, COLOR_PAIR(2));
+    
+        wbkgdset(win_options, COLOR_PAIR(2)); // Set background color of window
+        wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
+        
+        
+
+        wattron(popup, COLOR_PAIR(selected + 1));
+        mvwprintw(popup, win_height - 2, 25, "     ");
+        wattroff(popup, COLOR_PAIR(selected + 1));
+        wrefresh(stdscr); 
+        update_panels();
+        doupdate();
+
+        int ch = wgetch(popup);
+        if (ch == '\n') break;
+        else if (ch == KEY_LEFT && selected % COLORS_PER_ROW > 0)
+            selected--;
+        else if (ch == KEY_RIGHT && selected % COLORS_PER_ROW < COLORS_PER_ROW - 1)
+            selected++;
+        else if (ch == KEY_UP && selected >= COLORS_PER_ROW)
+            selected -= COLORS_PER_ROW;
+        else if (ch == KEY_DOWN && selected < 256 - COLORS_PER_ROW)
+            selected += COLORS_PER_ROW;
+    }
+
+    del_panel(panel);
+    delwin(popup);
+    update_panels();
+    doupdate();
+    text_color = selected;
     return selected;
 }
 void change_color(void){
-    init_pair(10, COLOR_WHITE,show_color_popup());
+    show_color_popup();
+}
+void change_text_color(void){
+    show_color_popup_text();
 }
