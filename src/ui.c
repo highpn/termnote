@@ -92,14 +92,14 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
         if (i == selected)
         {
             wattron(win_notes_names, A_REVERSE);
-            mvwprintw(win_notes_names, 1, x, "%s", filenames[i]);
+            mvwprintw(win_notes_names, 1, x-selected*10, "%s", filenames[i]);
             wattroff(win_notes_names, A_REVERSE);
         }
         else
         {
-            mvwprintw(win_notes_names, 1, x, "%s", filenames[i]);
+            mvwprintw(win_notes_names, 1, x-selected*10, "%s", filenames[i]);
         }
-        x += strlen(filenames[i]) + 3; // Adjust spacing
+        x += (strlen(filenames[i]) + 3); // Adjust spacing
     }
     buffer = memset(buffer, 0, TEXT_BUFFER_SIZE);
     strncpy(buffer, notes_load(filenames[selected], notes_dir_path), TEXT_BUFFER_SIZE - 1);
