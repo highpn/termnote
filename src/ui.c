@@ -31,7 +31,7 @@ int               ui_init()
     curs_set(0);
     start_color();                        // Enable color functionality
     init_pair(1, COLOR_BLUE, COLOR_BLACK); // Pair #1: Red text on black backgro
-    init_pair(2, COLOR_BLUE, COLOR_BLACK);
+    init_pair(300, COLOR_BLUE, COLOR_BLACK);
     show_popup(  "Welcome to TermNote\n\n"
     "A lightweight terminal-based note-taking application.\n"
     "Create, view, and manage plain text notes quickly\n"
@@ -43,10 +43,10 @@ int               ui_init()
     win_notes_names = newwin(5, 100, 5, 10);
     win_options     = newwin(5, 100, 30, 10);
     win_tools       = newwin(20, 20, 10, 60);
-    wbkgd(win_notes_names, COLOR_PAIR(2));
+    wbkgd(win_notes_names, COLOR_PAIR(300));
     wbkgd(win_text, COLOR_PAIR(21));    // Set background color of window
-    wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
-    wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
+    wbkgd(win_options, COLOR_PAIR(300)); // Set background color of window
+    wbkgd(win_tools, COLOR_PAIR(300));   // Set background color of window
     
     // wrefresh(win_tools);
     return 1;
@@ -309,7 +309,8 @@ int show_color_popup() {
     start_color();
     use_default_colors();
     for (int i = 0; i < 256; i++) {
-        init_pair(i + 1, text_color, i);
+        init_pair(i + 1, COLOR_BLACK, i);
+        wrefresh(stdscr);
     }
 
     int selected = 0;
@@ -337,15 +338,14 @@ int show_color_popup() {
         mvwprintw(popup, win_height - 2, 2, "Selected color: %3d ", selected);
         init_pair(21,text_color,selected);
         wbkgdset(win_text,COLOR_PAIR(21));
-        wbkgd(win_notes_names, COLOR_PAIR(2));
+       // wbkgd(win_notes_names, COLOR_PAIR(300));
     
-        wbkgd(win_options, COLOR_PAIR(2)); // Set background color of window
-        wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
+        //wbkgd(win_options, COLOR_PAIR(300)); // Set background color of window
+        //wbkgd(win_tools, COLOR_PAIR(300));   // Set background color of window
         wrefresh(win_text); 
         wattron(popup, COLOR_PAIR(selected + 1));
         mvwprintw(popup, win_height - 2, 25, "     ");
         wattroff(popup, COLOR_PAIR(selected + 1));
-                wrefresh(stdscr); 
 
         update_panels();
         doupdate();
@@ -386,7 +386,8 @@ int show_color_popup_text() {
     start_color();
     use_default_colors();
     for (int i = 0; i < 256; i++) {
-        init_pair(i + 1,background_color,i);
+        init_pair(i + 1,COLOR_BLACK,i);
+        wrefresh(stdscr);
     }
 
     int selected = 0;
@@ -415,10 +416,10 @@ int show_color_popup_text() {
         init_pair(21,selected,background_color);
         wbkgdset(win_text,COLOR_PAIR(21));
         
-        wbkgdset(win_notes_names, COLOR_PAIR(2));
+        //wbkgdset(win_notes_names, COLOR_PAIR(2));
     
-        wbkgdset(win_options, COLOR_PAIR(2)); // Set background color of window
-        wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
+        //wbkgdset(win_options, COLOR_PAIR(2)); // Set background color of window
+        //wbkgd(win_tools, COLOR_PAIR(2));   // Set background color of window
         
         
 
