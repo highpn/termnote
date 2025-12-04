@@ -5,7 +5,6 @@
 
 int  ui_init();
 void ui_draw_header(const char *title);
-void ui_draw_input(const char *prefix, int ch);
 int  ui_get_key();
 void ui_cleanup();
 void ui_edit_note(char *buffer, size_t bufsize);           // Simple line editor (raw mode)

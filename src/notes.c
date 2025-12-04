@@ -1,4 +1,5 @@
 #include "../include/notes.h"
+#include "../include/system.h"
 #include <dirent.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -10,6 +11,10 @@
 #include <limits.h>
 #define TEXT_BUFFER_SIZE 4096
 #define NOTES_APP_DIR "/notes"
+#define CONFIG_FILE_NAME "/config.txt"
+
+
+
 char *notes_dir_path;
 int   notes_load_all(const char *dir_name)
 {
@@ -194,4 +199,52 @@ char *get_notes_dir()
     notes_dir_path = path; // Set the global variable
                            // Ensure the path ends with a slash
     return path;
+}
+char *get_config_path() {
+    const char *xdg_config_home = getenv("XDG_CONFIG_HOME");
+    const char *home = getenv("HOME");
+    char *path = malloc(PATH_MAX);
+    if (xdg_config_home && xdg_config_home[0] != '\0') {
+        snprintf(path, PATH_MAX, "%s%s", xdg_config_home, CONFIG_FILE_NAME);
+    } else if (home && home[0] != '\0') {
+        snprintf(path, PATH_MAX, "%s/.config%s", home, CONFIG_FILE_NAME);
+    } else {
+        snprintf(path, PATH_MAX, "./config.txt");
+    }
+    return path;
+}
+
+void load_config(TermNoteConfig *cfg) {
+    char *path = get_config_path();
+    FILE *f = fopen(path, "r");
+    if (!f) {
+        // Defaults
+        cfg->background_color = 0; // black
+        cfg->text_color = 7;       // white
+        cfg->last_note[0] = '\0';
+        free(path);
+        return;
+    }
+    fscanf(f, "%d %d %255[^\n]", &cfg->background_color, &cfg->text_color, cfg->last_note);
+    fclose(f);
+    printf("Config loaded from %s\n", path);
+    free(path);
+}
+
+void save_config(TermNoteConfig *cfg) {
+    char *path = get_config_path();
+    
+    // Ensure directory exists
+    char dir[PATH_MAX];
+    strncpy(dir, path, PATH_MAX);
+    for (int i = strlen(dir); i >= 0; i--) {
+        if (dir[i] == '/') { dir[i] = '\0'; break; }
+    }
+    mkdir(dir, 0700); // create ~/.config/TermNote if needed
+
+    FILE *f = fopen(path, "w");
+    if (!f) { free(path); return; }
+    fprintf(f, "%d %d %s\n", cfg->background_color, cfg->text_color, cfg->last_note);
+    fclose(f);
+    free(path);
 }

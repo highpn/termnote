@@ -1,5 +1,6 @@
 #include "ui.h"
 #include "notes.h"
+#include "../include/system.h"
 #include <errno.h>
 #include <ncurses.h>
 #include <panel.h>
@@ -31,14 +32,14 @@ int               ui_init()
     curs_set(0);
     start_color();                        // Enable color functionality
     init_pair(1, COLOR_BLUE, COLOR_BLACK); // Pair #1: Red text on black backgro
-    init_pair(300, COLOR_BLUE, COLOR_BLACK);
-    show_popup(  "Welcome to TermNote\n\n"
+    init_pair(300, text_color, COLOR_BLACK);
+    /* show_popup(  "Welcome to TermNote\n\n"
     "A lightweight terminal-based note-taking application.\n"
     "Create, view, and manage plain text notes quickly\n"
     "without leaving the terminal.\n\n"
     "Shortcuts:\n"
-    "Use arrow keys and Enter to navigate the interface.");
-    init_pair(21,COLOR_WHITE,show_color_popup());
+    "Use arrow keys and Enter to navigate the interface.");*/
+    init_pair(21,text_color,show_color_popup());
     win_text        = newwin(20, 50, 10, 10);
     win_notes_names = newwin(5, 100, 5, 10);
     win_options     = newwin(5, 100, 30, 10);
@@ -55,15 +56,6 @@ int               ui_init()
 void ui_draw_header(const char *title)
 {
     mvprintw(0, 0, "%s", title);
-    refresh();
-}
-
-void ui_draw_input(const char *prefix, int ch)
-{
-    move(0, 0);
-    clrtoeol();
-    // printw("%s%c", prefix, ch);
-
     refresh();
 }
 
@@ -92,12 +84,12 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
         if (i == selected)
         {
             wattron(win_notes_names, A_REVERSE);
-            mvwprintw(win_notes_names, 1, x-selected*10, "%s", filenames[i]);
+            mvwprintw(win_notes_names, 1, x-selected*5, "%s", filenames[i]);
             wattroff(win_notes_names, A_REVERSE);
         }
         else
         {
-            mvwprintw(win_notes_names, 1, x-selected*10, "%s", filenames[i]);
+            mvwprintw(win_notes_names, 1, x-selected*5, "%s", filenames[i]);
         }
         x += (strlen(filenames[i]) + 3); // Adjust spacing
     }
@@ -480,6 +472,12 @@ int show_color_popup_text() {
     update_panels();
     doupdate();
     text_color = selected;
+    TermNoteConfig cfg;
+    cfg.background_color = background_color;
+    cfg.text_color       = text_color;
+    save_config(&cfg);
+
+    
     return selected;
 }
 void change_color(void){

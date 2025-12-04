@@ -6,7 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define TEXT_BUFFER_SIZE 4096                      // Size of the text buffer for notes
+#define TEXT_BUFFER_SIZE 4096
+extern int background_color;          // Background color for the UI
+extern int text_color;                // Text color for the UI
+                      // Size of the text buffer for notes
 char                     buffer[TEXT_BUFFER_SIZE]; // Buffer to hold note content
 extern enum menu_options options;                  // Current menu option
 extern WINDOW           *win_notes_names;          // Window for displaying notes list
@@ -28,9 +31,13 @@ void add_note_to_list();
 
 // Function to initialize the UI and load notes
 int main()
-{
-
-    get_notes_dir();
+{   TermNoteConfig cfg;
+    load_config(&cfg);
+    background_color = cfg.background_color;
+    text_color = cfg.text_color;
+    printf("Loaded config: background_color=%d, text_color=%d, last_note=%s\n",
+           cfg.background_color, cfg.text_color, cfg.last_note);
+    notes_dir_path=get_notes_dir();
     if (notes_dir_path == NULL)
     {
         fprintf(stderr, "Failed to get notes directory.\n");
@@ -198,6 +205,8 @@ void handle_enter_key()
     }
     else if (tools_selected == selected_quit)
     {
+        
+    
         running = 0;
     }
     else if (tools_selected == selected_save)
