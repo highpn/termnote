@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #define TEXT_BUFFER_SIZE 4096
 extern int background_color;          // Background color for the UI
 extern int text_color;                // Text color for the UI
@@ -33,6 +34,8 @@ void add_note_to_list();
 int main()
 {   TermNoteConfig cfg;
     load_config(&cfg);
+        
+
     background_color = cfg.background_color;
     text_color = cfg.text_color;
     printf("Loaded config: background_color=%d, text_color=%d, last_note=%s\n",
@@ -47,11 +50,11 @@ int main()
     {
         return EXIT_FAILURE;
     }
-    refresh_notes_list();
     ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
-    refresh();
+    refresh_notes_list();
     while (running)
     {
+        
         redraw_ui();
         if (refresh_notes_list() == -1)
             break;
@@ -61,6 +64,7 @@ int main()
 
         if (refresh_notes_list() == -1)
             break;
+        usleep(1000); // Small delay to reduce CPU usage
     }
 
     ui_cleanup();
@@ -70,7 +74,6 @@ int main()
 void handle_key_press(int ch)
 {
     char *tmp = buffer;
-
     switch (ch)
     {
     case 'q':
@@ -130,16 +133,19 @@ void redraw_ui()
     if (count == 0)
     {
         selected_index = 0;
+
         buffer[0]      = '\0';
     }
     else
-    {
+    {       
+        
         ui_draw_note(file_names[selected_index], buffer);
     }
     ui_list_notes(win_notes_names, file_names, count, selected_index, buffer);
     ui_display_options();
     ui_list_tools(tools_selected);
-    refresh();
+    wrefresh(win_notes_names);
+    wrefresh(win_text);
 }
 int refresh_notes_list()
 {
@@ -185,6 +191,10 @@ void handle_enter_key()
         }
         ui_edit_note(buffer, TEXT_BUFFER_SIZE);
         notes_delete(file_names[selected_index]); // Delete the old note
+        clear();    // Clear the virtual screen buffer
+refresh();  // Apply changes to the terminal
+
+        find_command(buffer); // Process commands in the note
         if (notes_save(file_names[selected_index], buffer, notes_dir_path) == -1)
         {
             mvprintw(0, 0, "Error saving note: %s", strerror(errno));

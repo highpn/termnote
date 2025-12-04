@@ -6,13 +6,20 @@
 #include <panel.h>
 #include <string.h>
 #include <unistd.h>
-#define TEXT_BUFFER_SIZE 4096
+#include <time.h>
+#include <bits/types.h>
+#include <stdlib.h>
 
+#define TEXT_BUFFER_SIZE 4096
+struct timespec last_blink = {0};
+int blink_state = 1;
 #define COLORS_PER_ROW 16
 #define COLOR_BOX_WIDTH 4
 #define COLOR_BOX_HEIGHT 1
 int background_color;
 int text_color;
+extern int selected;
+extern int tools_selected;
 char             *tools_[] = {"View Note", "Edit Note", "Quit", "save", "new note","delete note" ,"change color","change text color"    }; 
 enum menu_options options;
 WINDOW           *win_text;
@@ -96,7 +103,7 @@ void ui_list_notes(WINDOW *win_notes_names, char **filenames, int count, int sel
     buffer = memset(buffer, 0, TEXT_BUFFER_SIZE);
     strncpy(buffer, notes_load(filenames[selected], notes_dir_path), TEXT_BUFFER_SIZE - 1);
     (buffer)[TEXT_BUFFER_SIZE - 1] = '\0'; // Ensure null termination
-
+    
     if (buffer[0] == '\0')
     {
         wclear(win_text);
@@ -142,56 +149,133 @@ void ui_cleanup()
 
 void ui_edit_note(char *buffer, size_t bufsize)
 {
-   int pos = strlen(buffer); // Start at end of existing text
+    size_t len = strlen(buffer);
+    size_t cursor = len;  // cursor position
     int ch;
     int blink = 1;
+    static char last_buffer[10000] = {0};
 
-    nodelay(stdscr, TRUE); // Non-blocking input
-    curs_set(0);           // Hide real cursor
+    nodelay(stdscr, TRUE);
+    curs_set(0);
 
     while (1) {
-        // Draw prompt and current buffer content
-        move(0, 0);
-        clrtoeol();
-        printw("Edit note: ");
-        addnstr(buffer, pos);
+                    bool blink_update = false;
+                    struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
 
-        // Draw blinking underscore at the current position
-        move(0, 11 + pos); // 11 = length of "Edit note: "
-        addch(blink ? '_' : ' ');
+        long ms = (now.tv_sec - last_blink.tv_sec) * 1000 +
+                (now.tv_nsec - last_blink.tv_nsec) / 1000000;
+        if (ms > 500) {   // blink every 500ms
+            blink_state = !blink_state;
+            last_blink = now;
+            blink_update = true;
+        }
+        
+        if (blink_update || ch != ERR) {
+            // Recompute the cursor row/col from the buffer
+        if (strcmp(last_buffer, buffer) != 0) {
+            strcpy(last_buffer, buffer);
+        }
 
-        refresh();
-        blink = !blink;    // Toggle blink
-        usleep(30000);     // ~30ms blink interval
-
-        // Handle input
-        ch = getch();
-        if (ch == ERR) continue; // No input
-        if (ch == 27) break;     // Escape to cancel
-        if (ch == '\n') break;   // Enter to finish
-
-        if (ch == KEY_BACKSPACE || ch == 127) {
-            if (pos > 0) {
-                pos--;
-                buffer[pos] = '\0';
+        // ----- Compute screen row/column for cursor -----
+        size_t row = 0, col = 11; // offset for "Edit note: "
+        for (size_t i = 0; i < cursor; i++) {
+            if (buffer[i] == '\n') {
+                row++;
+                col = 0;
+            } else {
+                col++;
             }
-        } else if (pos < bufsize - 1 && ch >= 32 && ch <= 126) {
-            buffer[pos++] = (char)ch;
-            buffer[pos] = '\0';
+        }
+        // redraw UI windows first
+        wclear(win_text);
+        wclear(win_notes_names);
+        wclear(win_tools);
+
+        // (You can put all your normal UI drawing here)
+        // wprintw(win_notes_names, "..."); etc.
+
+        // Draw the editor line
+        mvwprintw(win_text, 0, 0, "Edit note: ");
+        waddnstr(win_text, buffer, len);
+
+        // Draw blinking cursor
+        wmove(win_text, row, col);
+        waddch(win_text, blink ? '_' : ' ');
+        
+        // refresh all windows
+        wrefresh(win_text);
+        wrefresh(win_notes_names);
+        wrefresh(win_tools);
+        ui_display_options();
+        ui_list_tools(tools_selected);
+        refresh();
+        
+        // ----- DRAW -----
+        mvprintw(0, 0, "Edit note: ");
+        addnstr(buffer, len);
+
+        move(row, col);
+        
+
+        addch(blink_state ? '_' : ' ');
+        //refresh();
+        blink = !blink;
+        usleep(30000);
+            }
+        // ----- INPUT -----
+        ch = getch();
+        if (ch == ERR) continue;
+
+        if (ch == 27) break;  // ESC
+        if (ch == '\n') break;
+
+        // ---- ARROW KEYS ----
+        if (ch == KEY_LEFT) {
+            if (cursor > 0) cursor--;
+            continue;
+        }
+        if (ch == KEY_RIGHT) {
+            if (cursor < len) cursor++;
+            continue;
+        }
+
+        // ---- BACKSPACE ----
+        if (ch == KEY_BACKSPACE || ch == 127) {
+            if (cursor > 0) {
+                memmove(&buffer[cursor-1], &buffer[cursor], len - cursor + 1);
+                cursor--;
+                len--;
+            }
+            continue;
+        }
+
+        // ---- NORMAL CHAR ----
+        if (ch >= 32 && ch <= 126 && len < bufsize - 1) {
+            memmove(&buffer[cursor+1], &buffer[cursor], len - cursor + 1);
+            buffer[cursor] = (char)ch;
+            cursor++;
+            len++;
         }
     }
+    // After editing, redraw full UI again
 
-    nodelay(stdscr, FALSE); // Restore blocking input
-    curs_set(1);            // Show real cursor
-
-    // Clear and refresh display
-    clear();
     wclear(win_text);
     wprintw(win_text, "%s", buffer);
     wrefresh(win_text);
     wrefresh(win_notes_names);
     wrefresh(win_tools);
     refresh();
+    nodelay(stdscr, FALSE);
+    // Clear the editor window completely
+werase(win_text);
+wrefresh(win_text);
+
+// Optionally also refresh notes list and tools
+wrefresh(win_notes_names);
+wrefresh(win_tools);
+
+
 }
 void ui_draw_note(const char *title, const char *content)
 {
@@ -486,3 +570,5 @@ void change_color(void){
 void change_text_color(void){
     show_color_popup_text();
 }
+
+

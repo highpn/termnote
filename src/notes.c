@@ -1,5 +1,6 @@
 #include "../include/notes.h"
 #include "../include/system.h"
+#include "../include/ui.h"
 #include <dirent.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -9,10 +10,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <limits.h>
+#include <ctype.h>
 #define TEXT_BUFFER_SIZE 4096
 #define NOTES_APP_DIR "/notes"
 #define CONFIG_FILE_NAME "/config.txt"
-
+#define MAX_LINE 1024
+#define MAX_TEXT 65536
 
 
 char *notes_dir_path;
@@ -114,7 +117,7 @@ int notes_list(char ***filenames, int *count, const char *dir_name)
         }
     }
     closedir(dirp);
-
+    sort_filenames(*filenames, *count);
     return 0;
 }
 int notes_delete(const char *filename)
@@ -247,4 +250,63 @@ void save_config(TermNoteConfig *cfg) {
     fprintf(f, "%d %d %s\n", cfg->background_color, cfg->text_color, cfg->last_note);
     fclose(f);
     free(path);
+}
+
+void sort_filenames(char **filenames, int count) {
+    for (int i = 0; i < count - 1; i++) {
+        for (int j = i + 1; j < count; j++) {
+            if (strcmp(filenames[i], filenames[j]) > 0) {
+                char *temp = filenames[i];
+                filenames[i] = filenames[j];
+                filenames[j] = temp;
+            }
+        }
+    }
+}
+
+void find_command(char *buffer)
+{
+
+    char output[MAX_TEXT] = {0};
+    char line[MAX_LINE];
+
+    char *p = buffer;
+
+    while (*p) {
+        // read a line
+        int len = 0;
+        while (p[len] && p[len] != '\n' && len < MAX_LINE-1)
+            len++;
+        strncpy(line, p, len);
+        line[len] = '\0';
+
+        // advance pointer past this line
+        p += len;
+        if (*p == '\n') p++;
+
+        // does the line start with "<<"
+        if (strncmp(line, "<<", 2) == 0) {
+            char *cmd = line + 2;
+
+            // run the command
+            FILE *fp = popen(cmd, "r");
+            if (!fp) {
+                strcat(output, "[Error running command]\n");
+                continue;
+            }
+
+            char temp[256];
+            while (fgets(temp, sizeof(temp), fp)) {
+                strcat(output, temp);
+            }
+            pclose(fp);
+        } else {
+            // normal line → copy to output
+            strcat(output, line);
+            strcat(output, "\n");
+        }
+    }
+
+    // replace original text
+    strcpy(buffer, output);
 }
